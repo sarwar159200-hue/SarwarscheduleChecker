@@ -1,0 +1,2181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sarwar SchedulePro AI v5 — P6 Schedule Check</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0b1f3a;--navy2:#132d52;--navy3:#1a3a68;
+  --accent:#1d6feb;--accent2:#1558c7;
+  --gold:#c9922a;--gold2:#f0b84a;
+  --success:#15803d;--warning:#b45309;--danger:#b91c1c;
+  --purple:#7c3aed;--purple2:#6d28d9;
+  --sbg:#dcfce7;--wbg:#fef9c3;--dbg:#fee2e2;--pbg:#ede9fe;
+  --border:#dee2e8;--surface:#f4f6fa;--white:#fff;
+  --text:#0d1b2e;--text2:#2d3f56;--text3:#60748a;
+  --r:8px;--sh:0 1px 4px rgba(0,0,0,.09);--shm:0 4px 16px rgba(0,0,0,.12);
+}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--surface);color:var(--text);min-height:100vh}
+.hdr{background:var(--navy);padding:0 1.75rem;display:flex;align-items:center;height:58px;position:sticky;top:0;z-index:200;box-shadow:0 2px 12px rgba(0,0,0,.35)}
+.hicon{width:36px;height:36px;background:linear-gradient(135deg,var(--accent),var(--gold));border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:17px;color:#fff;flex-shrink:0}
+.hmain{font-size:15px;font-weight:700;color:#fff;letter-spacing:-.01em}
+.hsub{font-size:10px;color:#7fa4cc;letter-spacing:.05em;text-transform:uppercase}
+.hsp{flex:1}
+.hdev{text-align:right;font-size:11px;color:#4d7aa0;line-height:1.5}
+.hdev strong{color:#89b8df;display:block;font-size:12px}
+.upwrap{padding:3rem 2rem;max-width:960px;margin:0 auto}
+.uphero{text-align:center;margin-bottom:2rem}
+.uphero h1{font-size:28px;font-weight:800;color:var(--navy);letter-spacing:-.02em;margin-bottom:.5rem}
+.uphero p{font-size:14px;color:var(--text3);max-width:600px;margin:0 auto}
+.upload-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem}
+.ucard{border:2px dashed #b0bec8;border-radius:14px;padding:1.75rem 1.25rem;text-align:center;background:#fff;cursor:pointer;transition:all .2s;box-shadow:var(--sh)}
+.ucard:hover,.ucard.drag{border-color:var(--accent);background:#eef5ff}
+.ucard-icon{font-size:36px;display:block;margin-bottom:.6rem}
+.ucard-title{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:.25rem}
+.ucard-sub{font-size:12px;color:var(--text3);margin-bottom:.85rem}
+.ubtn{display:inline-flex;align-items:center;gap:.4rem;background:var(--accent);color:#fff;border:none;padding:.5rem 1.25rem;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer;transition:background .15s}
+.ubtn:hover{background:var(--accent2)}
+.ubtn-purple{background:var(--purple)}.ubtn-purple:hover{background:var(--purple2)}
+.baseline-zone{border:2px dashed #f0b84a;border-radius:12px;padding:1.25rem;text-align:center;background:#fffbeb;cursor:pointer;transition:all .2s}
+.baseline-zone:hover{background:#fef3c7;border-color:var(--gold)}
+.baseline-zone.loaded{border-color:var(--success);background:#f0fdf4}
+.scope-zone{border:2px dashed #a78bfa;border-radius:12px;padding:1.25rem;text-align:center;background:#faf5ff;cursor:pointer;transition:all .2s;margin-top:.75rem}
+.scope-zone:hover{background:#f3e8ff;border-color:var(--purple)}
+.scope-zone.loaded{border-color:var(--purple);background:#ede9fe}
+.btag{display:inline-block;font-size:11px;font-weight:700;padding:.2rem .6rem;border-radius:10px;margin-bottom:.4rem}
+.btag-bl{background:var(--wbg);color:var(--warning)}
+.btag-sc{background:var(--pbg);color:var(--purple)}
+.pills{display:flex;flex-wrap:wrap;gap:.5rem;justify-content:center;margin-top:1.5rem}
+.pill{background:#fff;border:1px solid var(--border);border-radius:20px;padding:.3rem .85rem;font-size:12px;font-weight:500;color:var(--text2)}
+.loading{display:none;flex-direction:column;align-items:center;gap:1.1rem;padding:4rem;text-align:center}
+.spin{width:44px;height:44px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:sp .75s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.lstep{font-size:12.5px;color:var(--text3);padding:.2rem 0;display:flex;align-items:center;gap:.5rem}
+.lstep.done{color:var(--success)}.lstep.active{color:var(--accent);font-weight:600}
+.dash{display:none;padding:1.5rem 2rem 3rem;max-width:1440px;margin:0 auto}
+.dtop{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:1.25rem;flex-wrap:wrap}
+.pname{font-size:21px;font-weight:800;color:var(--navy);letter-spacing:-.02em}
+.pmeta{font-size:12px;color:var(--text3);margin-top:.3rem;line-height:1.7}
+.dbtns{display:flex;gap:.5rem;flex-wrap:wrap}
+.btn{padding:.48rem 1.1rem;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .15s}
+.bg{background:#fff;color:var(--text2);border:1.5px solid var(--border)}.bg:hover{background:var(--surface)}
+.bp{background:var(--accent);color:#fff}.bp:hover{background:var(--accent2)}
+.bgo{background:var(--gold);color:#fff}.bgo:hover{background:#a07218}
+.bpu{background:var(--purple);color:#fff}.bpu:hover{background:var(--purple2)}
+.srow{display:grid;grid-template-columns:210px 1fr;gap:1.1rem;margin-bottom:1.1rem}
+.scard{background:#fff;border:1px solid var(--border);border-radius:14px;padding:1.25rem;text-align:center;box-shadow:var(--sh);display:flex;flex-direction:column;align-items:center;justify-content:center}
+.sring{position:relative;width:120px;height:120px;margin-bottom:.75rem}
+.sring svg{transform:rotate(-90deg)}
+.snum{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:28px;font-weight:800;color:var(--navy)}
+.slbl{font-size:11.5px;color:var(--text3);font-weight:600;letter-spacing:.03em;text-transform:uppercase}
+.verd{margin-top:.5rem;font-size:12px;font-weight:700;padding:.25rem .8rem;border-radius:20px}
+.vg{background:var(--sbg);color:var(--success)}.vw{background:var(--wbg);color:var(--warning)}.vb{background:var(--dbg);color:var(--danger)}
+.kgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:.65rem}
+.kpi{background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:.85rem 1rem;box-shadow:var(--sh)}
+.kv{font-size:22px;font-weight:800;color:var(--navy);line-height:1}
+.kl{font-size:10px;font-weight:600;color:var(--text3);margin-top:.3rem;text-transform:uppercase;letter-spacing:.04em}
+.ks{font-size:11px;color:var(--text3);margin-top:.1rem}
+.tabs{display:flex;border-bottom:2px solid var(--border);margin-bottom:1.25rem;overflow-x:auto}
+.tab{padding:.6rem 1.2rem;font-size:13px;font-weight:600;color:var(--text3);cursor:pointer;border-bottom:2.5px solid transparent;margin-bottom:-2px;white-space:nowrap;transition:color .15s}
+.tab:hover{color:var(--navy)}.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tab-scope.active{color:var(--purple);border-bottom-color:var(--purple)}
+.tp{display:none}.tp.active{display:block}
+.sec-dl{display:flex;gap:.4rem;margin-bottom:.85rem;flex-wrap:wrap;align-items:center;background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:.55rem .75rem;box-shadow:var(--sh)}
+.sec-dl-lbl{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;flex:1;min-width:80px}
+.sdl{display:inline-flex;align-items:center;gap:.3rem;padding:.3rem .75rem;border-radius:5px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid;transition:all .15s}
+.sdl-pdf{color:#b91c1c;border-color:#b91c1c}.sdl-pdf:hover{background:#fef2f2}
+.sdl-xl{color:#15803d;border-color:#15803d}.sdl-xl:hover{background:#f0fdf4}
+.sdl-wd{color:#1558c7;border-color:#1558c7}.sdl-wd:hover{background:#eef5ff}
+.dcma-grid{display:grid;gap:.55rem}
+.di{background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:.85rem 1.1rem;display:grid;grid-template-columns:32px 1fr auto auto;align-items:center;gap:.85rem;box-shadow:var(--sh)}
+.dn{width:28px;height:28px;border-radius:6px;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.dname{font-size:13px;font-weight:600;color:var(--text)}
+.ddet{font-size:11px;color:var(--text3);margin-top:.12rem}
+.dmet{font-size:13px;font-weight:700;text-align:right;min-width:55px}
+.badge{display:inline-flex;align-items:center;font-size:11px;font-weight:700;padding:.2rem .6rem;border-radius:20px}
+.bp2{background:var(--sbg);color:var(--success)}.bf{background:var(--dbg);color:var(--danger)}
+.bw{background:var(--wbg);color:var(--warning)}.bi{background:#e0f0ff;color:#1558c7}.bna{background:#f1f5f9;color:#64748b}
+.bpu2{background:var(--pbg);color:var(--purple)}
+.tw{overflow-x:auto;border-radius:var(--r);border:1px solid var(--border);background:#fff;box-shadow:var(--sh)}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{background:var(--navy);color:#fff;padding:.55rem .9rem;text-align:left;font-weight:600;font-size:11px;white-space:nowrap}
+td{padding:.44rem .9rem;border-bottom:1px solid var(--border);color:var(--text2);white-space:nowrap}
+tr:last-child td{border-bottom:none}
+tr:nth-child(even) td{background:#f8fafc}
+tr:hover td{background:#eef5ff}
+.dc{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--danger);margin-right:.3rem;vertical-align:middle}
+.dw{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--warning);margin-right:.3rem;vertical-align:middle}
+.fr{display:flex;gap:.6rem;margin-bottom:.85rem;flex-wrap:wrap;align-items:center}
+.fr input,.fr select{padding:.38rem .7rem;border:1.5px solid var(--border);border-radius:var(--r);font-size:12.5px;background:#fff;color:var(--text);outline:none}
+.fr input:focus,.fr select:focus{border-color:var(--accent)}
+.cgrid{display:grid;grid-template-columns:1fr 1fr;gap:1.1rem}
+.ccard{background:#fff;border:1px solid var(--border);border-radius:12px;padding:1.1rem;box-shadow:var(--sh)}
+.ctitle{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:.75rem}
+.cwrap{position:relative;height:220px}
+.flist{display:grid;gap:.65rem}
+.fc{background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:.9rem 1.1rem;border-left:4px solid;box-shadow:var(--sh)}
+.fh{border-left-color:var(--danger)}.fm{border-left-color:var(--warning)}.fl{border-left-color:var(--success)}
+.ft{font-size:13px;font-weight:700;color:var(--text);margin:.3rem 0 .2rem}
+.fb{font-size:12.5px;color:var(--text3);line-height:1.6}
+.frec{font-size:12px;color:var(--navy);background:#eef5ff;border-radius:5px;padding:.45rem .7rem;margin-top:.5rem;line-height:1.55}
+.daly-hero{background:#fff;border:1px solid var(--border);border-radius:14px;padding:1.25rem;box-shadow:var(--sh);margin-bottom:1.1rem}
+.dkrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:.75rem;margin-bottom:1.1rem}
+.dkpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:.9rem;text-align:center}
+.dkv{font-size:19px;font-weight:800;color:var(--navy);margin-bottom:.2rem}
+.dkl{font-size:10.5px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.04em}
+.whgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:.9rem;margin-bottom:1.1rem}
+.whcard{background:#fff;border:1px solid var(--border);border-radius:12px;padding:1.1rem;box-shadow:var(--sh)}
+.whlbl{display:flex;align-items:center;gap:.55rem;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.55rem}
+.whico{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.whbody{font-size:13px;color:var(--text);line-height:1.65}
+.whdet{font-size:12px;color:var(--text3);margin-top:.35rem;line-height:1.55}
+.dtgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:.65rem;margin-bottom:1.1rem}
+.dtcard{border-radius:var(--r);padding:.9rem 1rem;border:1px solid}
+.dt-exc{background:#e0f0ff;border-color:#93c5fd}.dt-comp{background:var(--wbg);border-color:#fbbf24}
+.dt-conc{background:#fce7f3;border-color:#f9a8d4}.dt-crit{background:var(--dbg);border-color:#fca5a5}
+.dtt{font-size:12px;font-weight:700;color:var(--navy);margin-bottom:.3rem}
+.dtb{font-size:12px;color:var(--text2);line-height:1.5}
+.rbox{background:linear-gradient(135deg,var(--navy),var(--navy3));border-radius:12px;padding:1.1rem 1.35rem;color:#fff;margin-top:1rem}
+.rboxt{font-size:13px;font-weight:700;margin-bottom:.6rem;color:var(--gold2)}
+.ritem{font-size:12.5px;line-height:1.55;padding:.45rem .7rem;background:rgba(255,255,255,.07);border-radius:5px;border-left:3px solid var(--gold2);margin-bottom:.4rem}
+.bb-yes{background:#dcfce7;border:1px solid #86efac;border-radius:var(--r);padding:.65rem 1rem;font-size:12.5px;color:var(--success);margin-bottom:.85rem;font-weight:600}
+.bb-no{background:var(--wbg);border:1px solid #fbbf24;border-radius:var(--r);padding:.65rem 1rem;font-size:12.5px;color:var(--warning);margin-bottom:.85rem}
+.bb-scope{background:var(--pbg);border:1px solid #a78bfa;border-radius:var(--r);padding:.65rem 1rem;font-size:12.5px;color:var(--purple);margin-bottom:.85rem;font-weight:600}
+.bldiff-head{display:grid;grid-template-columns:140px 1fr 90px 90px 90px 90px 100px;gap:.5rem;background:var(--navy);color:#fff;font-size:11px;font-weight:600;padding:.5rem .75rem;border-radius:var(--r) var(--r) 0 0}
+.bldiff-row{display:grid;grid-template-columns:140px 1fr 90px 90px 90px 90px 100px;gap:.5rem;font-size:12px;padding:.45rem .75rem;border-bottom:1px solid var(--border);background:#fff;align-items:center}
+.bldiff-row:nth-child(even){background:#f8fafc}
+.repwrap{background:#fff;border:1px solid var(--border);border-radius:14px;padding:2rem;box-shadow:var(--sh);max-width:960px}
+.rcov{border-bottom:3px solid var(--navy);padding-bottom:1.5rem;margin-bottom:1.5rem}
+.rlogbar{display:flex;align-items:center;gap:.85rem;margin-bottom:.85rem}
+.rlogbox{background:var(--navy);color:#fff;padding:.4rem .9rem;border-radius:5px;font-size:13.5px;font-weight:800}
+.rtitle{font-size:22px;font-weight:800;color:var(--navy);letter-spacing:-.02em}
+.rsub{font-size:13px;color:var(--text3);margin-top:.2rem}
+.rmeta{display:grid;grid-template-columns:1fr 1fr;gap:.35rem .65rem;margin-top:.9rem;background:var(--surface);border-radius:var(--r);padding:.8rem .95rem;font-size:12.5px}
+.rrow{display:flex;gap:.5rem}.rl{color:var(--text3);min-width:105px;flex-shrink:0}.rv{color:var(--text);font-weight:600}
+.rsec{margin-bottom:1.35rem}
+.rst{font-size:14px;font-weight:800;color:var(--navy);border-bottom:1.5px solid var(--border);padding-bottom:.35rem;margin-bottom:.75rem}
+.rb{font-size:13px;color:var(--text2);line-height:1.75}
+.sigbox{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.5rem;margin-top:1rem}
+.sig{border-top:1px solid var(--border);padding-top:.65rem;text-align:center;font-size:12px;color:var(--text3)}
+.sign{font-size:13px;font-weight:700;color:var(--text);margin-bottom:.2rem}
+.stitle{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:.75rem}
+.ibox{background:#eef5ff;border:1px solid #93c5fd;border-radius:var(--r);padding:.75rem 1rem;font-size:12.5px;color:#1d3e70;margin-bottom:.9rem;line-height:1.6}
+.empty{text-align:center;padding:2rem;color:var(--text3);font-size:13px}
+/* SCOPE STATS */
+.scope-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.65rem;margin-bottom:1rem}
+.sstat{background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:.85rem 1rem;box-shadow:var(--sh);text-align:center}
+.sstat-v{font-size:22px;font-weight:800;line-height:1}
+.sstat-l{font-size:10px;font-weight:600;color:var(--text3);margin-top:.3rem;text-transform:uppercase;letter-spacing:.04em}
+/* EXPORT MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(11,31,58,.55);z-index:500;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:16px;padding:2rem;width:680px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.modal-title{font-size:18px;font-weight:800;color:var(--navy);margin-bottom:.25rem}
+.modal-sub{font-size:12.5px;color:var(--text3);margin-bottom:1.25rem}
+.fmt-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.65rem;margin-bottom:1.35rem}
+.fmt-card{border:2px solid var(--border);border-radius:10px;padding:.9rem .65rem;text-align:center;cursor:pointer;transition:all .15s}
+.fmt-card:hover{border-color:var(--accent);background:#f0f7ff}
+.fmt-card.active{border-color:var(--accent);background:#eef5ff}
+.fmt-icon{font-size:28px;display:block;margin-bottom:.35rem}
+.fmt-label{font-size:12px;font-weight:700;color:var(--navy)}
+.fmt-ext{font-size:11px;color:var(--text3)}
+.chk-grid{display:grid;grid-template-columns:1fr 1fr;gap:.4rem .9rem;margin-bottom:1.25rem}
+.chk-item{display:flex;align-items:center;gap:.5rem;font-size:13px;color:var(--text2);cursor:pointer}
+.chk-item input{width:15px;height:15px;cursor:pointer;accent-color:var(--accent)}
+.modal-footer{display:flex;gap:.65rem;justify-content:flex-end;padding-top:1rem;border-top:1px solid var(--border)}
+@media(max-width:768px){
+  .srow{grid-template-columns:1fr}.cgrid{grid-template-columns:1fr}
+  .dash{padding:1rem}.whgrid{grid-template-columns:1fr}
+  .upload-grid{grid-template-columns:1fr}
+  .di{grid-template-columns:32px 1fr auto}.dmet{display:none}
+  .fmt-grid{grid-template-columns:repeat(2,1fr)}
+  .chk-grid{grid-template-columns:1fr}
+}
+@media print{.hdr,.dbtns,.tabs,.fr,.sec-dl,.modal-overlay{display:none!important}.tp{display:block!important}}
+</style>
+</head>
+<body>
+<!-- HEADER -->
+<header class="hdr">
+  <div style="display:flex;align-items:center;gap:.75rem">
+    <div class="hicon">S</div>
+    <div style="display:flex;flex-direction:column;line-height:1.25">
+      <span class="hmain">Sarwar SchedulePro AI</span>
+      <span class="hsub" id="appSub">v5 · P6 · MS Project · Scope Gap · Multi-Format Export</span>
+    </div>
+  </div>
+  <div class="hsp"></div>
+  <div class="hdev"><strong>Sarwar</strong>Planning &amp; Project Controls</div>
+</header>
+
+<!-- UPLOAD SECTION -->
+<div class="upwrap" id="uploadSection">
+  <div class="uphero">
+    <h1 id="heroTitle">Multi-Format Schedule Intelligence</h1>
+    <p id="heroSub">Upload your schedule, optionally your approved baseline, and optionally your scope document — then get DCMA health check, baseline delay analysis, and scope gap analysis with multi-format export.</p>
+  </div>
+
+  <!-- STEP 1 -->
+  <div id="step1lbl" style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:.6rem">Step 1 — Upload current schedule</div>
+  <div class="upload-grid">
+    <div class="ucard" id="dz-xer" onclick="document.getElementById('fi-xer').click()">
+      <span class="ucard-icon">🏗️</span>
+      <div class="ucard-title">Primavera P6</div>
+      <div class="ucard-sub">.XER file</div>
+      <button class="ubtn" onclick="event.stopPropagation();document.getElementById('fi-xer').click()">Choose XER</button>
+    </div>
+    <div class="ucard" id="dz-xml" onclick="document.getElementById('fi-xml').click()">
+      <span class="ucard-icon">📊</span>
+      <div class="ucard-title">MS Project / P6 XML</div>
+      <div class="ucard-sub">.XML (MSPDI or P6 XML)</div>
+      <button class="ubtn" onclick="event.stopPropagation();document.getElementById('fi-xml').click()">Choose XML</button>
+    </div>
+    <div class="ucard" id="dz-xlsx" onclick="document.getElementById('fi-xlsx').click()">
+      <span class="ucard-icon">📋</span>
+      <div class="ucard-title">Excel</div>
+      <div class="ucard-sub">.XLSX activity list</div>
+      <button class="ubtn" onclick="event.stopPropagation();document.getElementById('fi-xlsx').click()">Choose Excel</button>
+    </div>
+    <div class="ucard" style="border-style:solid;background:var(--surface);cursor:default;opacity:.6">
+      <span class="ucard-icon">🔮</span>
+      <div class="ucard-title">MPP (coming soon)</div>
+      <div class="ucard-sub">Direct .MPP binary</div>
+      <button class="ubtn" style="background:#94a3b8;cursor:not-allowed">Soon</button>
+    </div>
+  </div>
+  <input type="file" id="fi-xer"  accept=".xer,.XER" style="display:none">
+  <input type="file" id="fi-xml"  accept=".xml,.XML" style="display:none">
+  <input type="file" id="fi-xlsx" accept=".xlsx,.xls" style="display:none">
+
+  <!-- STEP 2 BASELINE -->
+  <div id="step2lbl" style="font-size:13px;font-weight:700;color:var(--navy);margin:.85rem 0 .45rem">
+    Step 2 — Upload approved baseline <span style="font-weight:400;color:var(--text3)">(optional — required for accurate delay analysis)</span>
+  </div>
+  <div class="baseline-zone" id="dz-bl" onclick="blZoneClick(event)">
+    <div class="btag btag-bl" id="bl-tag">BASELINE</div>
+    <div style="font-size:13px;font-weight:600;color:var(--warning)" id="bl-label">Drop baseline file here (XER, XML, or XLSX)</div>
+    <div style="font-size:12px;color:var(--text3);margin-top:.3rem" id="bl-sub">Upload the approved baseline for definitive delay analysis. Without it, delay analysis uses float-based estimation.</div>
+    <div id="bl-actions" style="display:none;margin-top:.75rem;gap:.5rem;justify-content:center;align-items:center;flex-wrap:wrap">
+      <button onclick="event.stopPropagation();document.getElementById('fi-bl').click()" style="background:var(--accent);color:#fff;border:none;padding:.4rem .9rem;border-radius:var(--r);font-size:12px;font-weight:600;cursor:pointer">Change Baseline</button>
+      <button onclick="event.stopPropagation();removeBaseline()" style="background:var(--danger);color:#fff;border:none;padding:.4rem .9rem;border-radius:var(--r);font-size:12px;font-weight:600;cursor:pointer">✕ Remove</button>
+    </div>
+  </div>
+  <input type="file" id="fi-bl" accept=".xer,.XER,.xml,.XML,.xlsx,.xls" style="display:none">
+
+  <!-- STEP 3 SCOPE -->
+  <div id="step3lbl" style="font-size:13px;font-weight:700;color:var(--navy);margin:.85rem 0 .45rem">
+    Step 3 — Upload scope document <span style="font-weight:400;color:var(--text3)">(optional — enables scope vs schedule gap analysis)</span>
+  </div>
+  <div class="scope-zone" id="dz-sc" onclick="scZoneClick(event)">
+    <div class="btag btag-sc" id="sc-tag">SCOPE DOC</div>
+    <div style="font-size:13px;font-weight:600;color:var(--purple)" id="sc-label">Drop scope document here (PDF, Excel, Word, CSV, TXT)</div>
+    <div style="font-size:12px;color:var(--text3);margin-top:.3rem" id="sc-sub">Upload your scope of work, deliverable list, or WBS dictionary. The tool will identify scope items not covered in the schedule and vice versa.</div>
+    <div id="sc-actions" style="display:none;margin-top:.75rem;gap:.5rem;justify-content:center;align-items:center;flex-wrap:wrap">
+      <button onclick="event.stopPropagation();document.getElementById('fi-sc').click()" style="background:var(--purple);color:#fff;border:none;padding:.4rem .9rem;border-radius:var(--r);font-size:12px;font-weight:600;cursor:pointer">Change Scope File</button>
+      <button onclick="event.stopPropagation();removeScope()" style="background:var(--danger);color:#fff;border:none;padding:.4rem .9rem;border-radius:var(--r);font-size:12px;font-weight:600;cursor:pointer">✕ Remove</button>
+    </div>
+  </div>
+  <input type="file" id="fi-sc" accept=".pdf,.xlsx,.xls,.csv,.txt,.docx,.doc" style="display:none">
+
+  <div class="pills">
+    <span class="pill">✓ Primavera P6 XER</span>
+    <span class="pill">✓ MS Project XML</span>
+    <span class="pill">✓ P6 XML</span>
+    <span class="pill">✓ Excel activity list</span>
+    <span class="pill">✓ Scope PDF / Excel / Word</span>
+    <span class="pill">✓ DCMA 14-point</span>
+    <span class="pill">✓ Baseline delay analysis</span>
+    <span class="pill">✓ Scope gap analysis</span>
+    <span class="pill">✓ Export PDF / Excel / Word</span>
+    <span class="pill">✓ 100% browser-based</span>
+  </div>
+</div>
+
+<!-- LOADING -->
+<div class="loading" id="loadingSection">
+  <div class="spin"></div>
+  <div style="font-size:15px;font-weight:700;color:var(--navy)" id="lmsg">Reading file…</div>
+  <div style="margin-top:.25rem;display:grid;gap:.3rem" id="lsteps">
+    <div class="lstep" id="ls1">📂 Reading file structure</div>
+    <div class="lstep" id="ls2">🔗 Parsing activities and relationships</div>
+    <div class="lstep" id="ls3">📅 Processing calendars and WBS</div>
+    <div class="lstep" id="ls4">📊 Running DCMA 14-point assessment</div>
+    <div class="lstep" id="ls5">🔍 Baseline comparison and delay analysis</div>
+    <div class="lstep" id="ls6">📄 Scope gap analysis and report build</div>
+  </div>
+</div>
+
+<!-- EXPORT MODAL -->
+<div class="modal-overlay" id="exportModal">
+  <div class="modal">
+    <div class="modal-title" id="exportTitle">📤 Export Report</div>
+    <div class="modal-sub" id="exportSub">Choose format and sections to include in your export</div>
+    <div class="fmt-grid">
+      <div class="fmt-card active" id="fmtPDF" onclick="selectFmt('pdf')">
+        <span class="fmt-icon">📄</span>
+        <div class="fmt-label">PDF</div>
+        <div class="fmt-ext">Print-ready</div>
+      </div>
+      <div class="fmt-card" id="fmtXL" onclick="selectFmt('xl')">
+        <span class="fmt-icon">📊</span>
+        <div class="fmt-label">Excel</div>
+        <div class="fmt-ext">.xlsx workbook</div>
+      </div>
+      <div class="fmt-card" id="fmtWD" onclick="selectFmt('wd')">
+        <span class="fmt-icon">📝</span>
+        <div class="fmt-label">Word</div>
+        <div class="fmt-ext">.doc report</div>
+      </div>
+      <div class="fmt-card" id="fmtCSV" onclick="selectFmt('csv')">
+        <span class="fmt-icon">📋</span>
+        <div class="fmt-label">CSV</div>
+        <div class="fmt-ext">Activity data</div>
+      </div>
+    </div>
+    <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.55rem">Sections to include</div>
+    <div class="chk-grid" id="chkGrid">
+      <label class="chk-item"><input type="checkbox" id="chk-summary" checked> Executive Summary &amp; KPIs</label>
+      <label class="chk-item"><input type="checkbox" id="chk-dcma" checked> DCMA 14-Point Assessment</label>
+      <label class="chk-item"><input type="checkbox" id="chk-delay" checked> Delay Analysis (WH Questions)</label>
+      <label class="chk-item"><input type="checkbox" id="chk-baseline" checked> Baseline Comparison</label>
+      <label class="chk-item"><input type="checkbox" id="chk-critical" checked> Critical Path</label>
+      <label class="chk-item"><input type="checkbox" id="chk-findings" checked> Findings &amp; Recommendations</label>
+      <label class="chk-item"><input type="checkbox" id="chk-activities" checked> Full Activity List</label>
+      <label class="chk-item"><input type="checkbox" id="chk-scope" checked> Scope Gap Analysis</label>
+      <label class="chk-item"><input type="checkbox" id="chk-sig" checked> Sign-off Block</label>
+    </div>
+    <div class="modal-footer">
+      <button class="btn bg" id="cancelBtn" onclick="closeModal()">Cancel</button>
+      <button class="btn bp" id="exportNowBtn" onclick="runExport()">Export Now</button>
+    </div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="dash" id="dashboard">
+  <div class="dtop">
+    <div>
+      <div class="pname" id="pname">—</div>
+      <div class="pmeta" id="pmeta">—</div>
+    </div>
+    <div class="dbtns">
+      <button class="btn bg" id="newFileBtn" onclick="resetApp()">↩ New File</button>
+      <button class="btn bg" id="dashBlBtn" onclick="removeBLFromDash()" style="display:none;border-color:#fbbf24;color:var(--warning)">✕ Remove Baseline</button>
+      <button class="btn bgo" id="exportDashBtn" onclick="openModal()">📤 Export Report</button>
+    </div>
+  </div>
+
+  <div class="srow">
+    <div class="scard">
+      <div class="sring">
+        <svg width="120" height="120" viewBox="0 0 120 120">
+          <circle cx="60" cy="60" r="50" fill="none" stroke="#e2e8f0" stroke-width="10"/>
+          <circle cx="60" cy="60" r="50" fill="none" id="sarc" stroke-width="10" stroke-linecap="round"
+            stroke-dasharray="314 314" stroke-dashoffset="314" style="transition:stroke-dashoffset 1s ease"/>
+        </svg>
+        <div class="snum" id="snum">—</div>
+      </div>
+      <div class="slbl" id="slbl">DCMA Health Score</div>
+      <div class="verd" id="sverd">—</div>
+    </div>
+    <div class="kgrid" id="kgrid"></div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('dcma',this)">DCMA 14-Point</div>
+    <div class="tab" onclick="showTab('delay',this)">⚠ Delay Analysis</div>
+    <div class="tab" onclick="showTab('baseline',this)">📊 Baseline Compare</div>
+    <div class="tab tab-scope" onclick="showTab('scope',this)">🔭 Scope Gap</div>
+    <div class="tab" onclick="showTab('activities',this)">Activities</div>
+    <div class="tab" onclick="showTab('critical',this)">Critical Path</div>
+    <div class="tab" onclick="showTab('charts',this)">Charts</div>
+    <div class="tab" onclick="showTab('findings',this)">Findings</div>
+    <div class="tab" onclick="showTab('report',this)">Full Report</div>
+  </div>
+
+  <!-- DCMA TAB -->
+  <div class="tp active" id="tab-dcma">
+    <div class="sec-dl">
+      <span class="sec-dl-lbl">Download DCMA section</span>
+      <button class="sdl sdl-pdf" onclick="secExport('dcma','pdf')">📄 PDF</button>
+      <button class="sdl sdl-xl" onclick="secExport('dcma','xl')">📊 Excel</button>
+      <button class="sdl sdl-wd" onclick="secExport('dcma','wd')">📝 Word</button>
+    </div>
+    <div class="dcma-grid" id="dcmaGrid"></div>
+  </div>
+
+  <!-- DELAY TAB -->
+  <div class="tp" id="tab-delay">
+    <div class="sec-dl">
+      <span class="sec-dl-lbl">Download Delay section</span>
+      <button class="sdl sdl-pdf" onclick="secExport('delay','pdf')">📄 PDF</button>
+      <button class="sdl sdl-xl" onclick="secExport('delay','xl')">📊 Excel</button>
+      <button class="sdl sdl-wd" onclick="secExport('delay','wd')">📝 Word</button>
+    </div>
+    <div id="delayBanner"></div>
+    <div class="dkrow" id="dkrow"></div>
+    <div class="stitle">Root Cause — WH Delay Questions</div>
+    <div class="whgrid" id="whgrid"></div>
+    <div class="dtgrid" id="dtgrid"></div>
+    <div style="font-size:14px;font-weight:700;color:var(--navy);margin-bottom:.65rem">Delay-impacted activities</div>
+    <div class="tw" style="margin-bottom:1rem">
+      <table><thead><tr>
+        <th>Activity ID</th><th>Activity Name</th><th>BL Start</th><th>BL Finish</th>
+        <th>Current Start</th><th>Current Finish</th><th>Start Delay</th><th>Finish Delay</th>
+        <th>Total Float</th><th>Impact</th><th>Recommended Action</th>
+      </tr></thead><tbody id="delayTable"></tbody></table>
+    </div>
+    <div class="rbox" id="recbox"></div>
+  </div>
+
+  <!-- BASELINE TAB -->
+  <div class="tp" id="tab-baseline">
+    <div class="sec-dl">
+      <span class="sec-dl-lbl">Download Baseline section</span>
+      <button class="sdl sdl-pdf" onclick="secExport('baseline','pdf')">📄 PDF</button>
+      <button class="sdl sdl-xl" onclick="secExport('baseline','xl')">📊 Excel</button>
+      <button class="sdl sdl-wd" onclick="secExport('baseline','wd')">📝 Word</button>
+    </div>
+    <div id="blBanner"></div>
+    <div id="blContent"></div>
+  </div>
+
+  <!-- SCOPE GAP TAB -->
+  <div class="tp" id="tab-scope">
+    <div class="sec-dl">
+      <span class="sec-dl-lbl">Download Scope Gap section</span>
+      <button class="sdl sdl-pdf" onclick="secExport('scope','pdf')">📄 PDF</button>
+      <button class="sdl sdl-xl" onclick="secExport('scope','xl')">📊 Excel</button>
+      <button class="sdl sdl-wd" onclick="secExport('scope','wd')">📝 Word</button>
+    </div>
+    <div id="scopeContent"></div>
+  </div>
+
+  <!-- ACTIVITIES TAB -->
+  <div class="tp" id="tab-activities">
+    <div class="sec-dl">
+      <span class="sec-dl-lbl">Download Activity List</span>
+      <button class="sdl sdl-pdf" onclick="secExport('activities','pdf')">📄 PDF</button>
+      <button class="sdl sdl-xl" onclick="secExport('activities','xl')">📊 Excel</button>
+      <button class="sdl sdl-wd" onclick="secExport('activities','wd')">📝 Word</button>
+    </div>
+    <div class="fr">
+      <input type="text" id="asrch" placeholder="Search activity name or ID…" oninput="filterActs()" style="flex:1;min-width:180px">
+      <select id="astat" onchange="filterActs()"><option value="">All status</option><option>Not started</option><option>In progress</option><option>Completed</option></select>
+      <select id="afilt" onchange="filterActs()">
+        <option value="">All</option><option value="critical">Critical</option>
+        <option value="near">Near critical (≤5d)</option><option value="neg">Negative float</option>
+        <option value="milestone">Milestones</option><option value="delay">Delayed vs baseline</option>
+        <option value="scope-miss">⚠ Scope gaps</option>
+      </select>
+      <span id="acnt" style="font-size:12px;color:var(--text3)"></span>
+    </div>
+    <div class="tw"><table><thead><tr>
+      <th>Activity ID</th><th>Name</th><th>Type</th><th>WBS</th><th>Dur</th>
+      <th>Early Start</th><th>Early Finish</th><th>BL Start</th><th>BL Finish</th>
+      <th>Total Float</th><th>% Comp</th><th>Status</th><th>Preds</th><th>Scope</th>
+    </tr></thead><tbody id="actTable"></tbody></table></div>
+  </div>
+
+  <!-- CRITICAL TAB -->
+  <div class="tp" id="tab-critical">
+    <div class="sec-dl">
+      <span class="sec-dl-lbl">Download Critical Path</span>
+      <button class="sdl sdl-pdf" onclick="secExport('critical','pdf')">📄 PDF</button>
+      <button class="sdl sdl-xl" onclick="secExport('critical','xl')">📊 Excel</button>
+      <button class="sdl sdl-wd" onclick="secExport('critical','wd')">📝 Word</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.1rem;margin-bottom:1.1rem">
+      <div class="ccard"><div class="ctitle">Critical path summary</div><div id="cpsumm" style="font-size:13px;color:var(--text2);line-height:1.9"></div></div>
+      <div class="ccard"><div class="ctitle">Float distribution</div><div class="cwrap"><canvas id="floatChart" role="img"></canvas></div></div>
+    </div>
+    <div class="stitle">Critical path activities</div>
+    <div class="tw"><table><thead><tr>
+      <th>Activity ID</th><th>Name</th><th>Duration</th><th>Early Start</th><th>Early Finish</th><th>Total Float</th><th>Preds</th>
+    </tr></thead><tbody id="critTable"></tbody></table></div>
+  </div>
+
+  <!-- CHARTS TAB -->
+  <div class="tp" id="tab-charts">
+    <div class="sec-dl">
+      <span class="sec-dl-lbl">Download Charts</span>
+      <button class="sdl sdl-pdf" onclick="secExport('charts','pdf')">📄 PDF</button>
+    </div>
+    <div class="cgrid">
+      <div class="ccard"><div class="ctitle">Activities by WBS</div><div class="cwrap"><canvas id="wbsChart"></canvas></div></div>
+      <div class="ccard"><div class="ctitle">Activity status</div><div class="cwrap"><canvas id="statChart"></canvas></div></div>
+      <div class="ccard"><div class="ctitle">Duration distribution</div><div class="cwrap"><canvas id="durChart"></canvas></div></div>
+      <div class="ccard"><div class="ctitle">Relationship types</div><div class="cwrap"><canvas id="relChart"></canvas></div></div>
+    </div>
+  </div>
+
+  <!-- FINDINGS TAB -->
+  <div class="tp" id="tab-findings">
+    <div class="sec-dl">
+      <span class="sec-dl-lbl">Download Findings</span>
+      <button class="sdl sdl-pdf" onclick="secExport('findings','pdf')">📄 PDF</button>
+      <button class="sdl sdl-xl" onclick="secExport('findings','xl')">📊 Excel</button>
+      <button class="sdl sdl-wd" onclick="secExport('findings','wd')">📝 Word</button>
+    </div>
+    <div class="flist" id="findList"></div>
+  </div>
+
+  <!-- FULL REPORT TAB -->
+  <div class="tp" id="tab-report">
+    <div class="sec-dl">
+      <span class="sec-dl-lbl">Download Full Report</span>
+      <button class="sdl sdl-pdf" onclick="secExport('report','pdf')">📄 PDF</button>
+      <button class="sdl sdl-xl" onclick="secExport('report','xl')">📊 Excel</button>
+      <button class="sdl sdl-wd" onclick="secExport('report','wd')">📝 Word</button>
+      <button class="sdl" style="color:#64748b;border-color:#64748b" onclick="secExport('report','csv')">📋 CSV</button>
+    </div>
+    <div class="repwrap" id="repContent"></div>
+  </div>
+</div>
+<script>
+// ══════════════════════════════════════════
+// UTILITIES
+// ══════════════════════════════════════════
+const pd=s=>{if(!s||s===''||s==='null') return null;const d=new Date(s.replace(' ','T'));return isNaN(d)?null:d;};
+const fmt=d=>d?d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}):'—';
+const ddays=(a,b)=>(a&&b)?Math.round((b-a)/86400000):null;
+const pf=n=>n!==null&&n!==undefined?Math.round(n*10)/10:null;
+let S=null,BL=null,D=null,DA=null,SC=null,allActs=[];
+let charts={};
+
+// ══════════════════════════════════════════
+// XER PARSER
+// ══════════════════════════════════════════
+function parseXER(text){
+  const lines=text.split(/\r?\n/),tables={};
+  let tbl=null,hdrs=[];
+  for(const line of lines){
+    if(!line.trim()) continue;
+    if(line.startsWith('%T\t')){tbl=line.slice(3).trim();tables[tbl]=[];hdrs=[];}
+    else if(line.startsWith('%F\t')) hdrs=line.slice(3).split('\t').map(h=>h.trim());
+    else if(line.startsWith('%R\t')&&tbl&&hdrs.length){
+      const v=line.slice(3).split('\t'),r={};
+      hdrs.forEach((h,i)=>{r[h]=(v[i]||'').trim();});
+      tables[tbl].push(r);
+    }
+  }
+  return normaliseXER(tables);
+}
+function normaliseXER(tables){
+  const proj=(tables['PROJECT']||tables['project']||[])[0]||{};
+  const taskRows=tables['TASK']||tables['task']||[];
+  const relRows=tables['TASKPRED']||tables['taskpred']||[];
+  const wbsRows=tables['PROJWBS']||tables['projwbs']||[];
+  const wbsMap={};
+  wbsRows.forEach(w=>{wbsMap[w.wbs_id]=w.wbs_name||w.wbs_short_name||w.wbs_id;});
+  const activities=taskRows.map(t=>{
+    const dur=parseFloat(t.target_drtn_hr_cnt||t.remain_drtn_hr_cnt||'0')/8;
+    const tf=parseFloat(t.total_float_hr_cnt||'9999')/8;
+    const pct=parseFloat(t.phys_complete_pct||t.act_pct_of_work||'0');
+    const sc=t.status_code||'TK_NotStart';
+    let status='Not started';
+    if(sc==='TK_Complete'||sc==='TK_Done') status='Completed';
+    else if(sc==='TK_Active'||sc==='TK_InProg') status='In progress';
+    const isMile=(t.task_type==='TT_Mile'||t.task_type==='TT_FinMile'||t.task_type==='TT_StartMile'||dur===0);
+    const hasCon=t.cstr_type&&t.cstr_type!==''&&t.cstr_type!=='CS_NLT'&&t.cstr_type!=='CS_ALAP';
+    const tfVal=isNaN(parseFloat(t.total_float_hr_cnt))?null:pf(tf);
+    return{
+      id:t.task_id,actId:t.task_code||t.task_id,name:t.task_name||'(unnamed)',
+      wbsId:t.wbs_id,wbs:wbsMap[t.wbs_id]||'Unassigned',
+      duration:pf(dur),
+      earlyStart:pd(t.early_start_date||t.target_start_date),
+      earlyFinish:pd(t.early_end_date||t.target_end_date),
+      actualStart:pd(t.act_start_date),actualFinish:pd(t.act_end_date),
+      blStart:null,blFinish:null,
+      totalFloat:tfVal,pct,status,
+      type:isMile?'Milestone':(t.task_type==='TT_LOE'?'LOE':'Task'),
+      constraintType:t.cstr_type||'',constraintDate:pd(t.cstr_date),
+      hasConstraint:hasCon,isCritical:false,
+      predecessors:[],successors:[],resources:[],_scopeTag:''
+    };
+  });
+  const rels=relRows.map(r=>({
+    predId:r.pred_task_id,succId:r.task_id,
+    type:r.pred_type||'PR_FS',lag:parseFloat(r.lag_hr_cnt||'0')/8
+  }));
+  return buildSchedule({
+    projectName:proj.proj_short_name||proj.proj_id||'Unnamed Project',
+    projectId:proj.proj_id||'',
+    dataDate:pd(proj.last_recalc_date||proj.plan_start_date),
+    projStart:pd(proj.plan_start_date||proj.scd_start_date),
+    projFinish:pd(proj.scd_end_date||proj.plan_end_date||proj.anticip_end_date),
+    activities,rels,calRows:[]
+  });
+}
+
+// ══════════════════════════════════════════
+// XML PARSERS
+// ══════════════════════════════════════════
+function parseXML(text){
+  const parser=new DOMParser();
+  const doc=parser.parseFromString(text,'application/xml');
+  if(doc.querySelector('parsererror')) throw new Error('Invalid XML file');
+  const isP6XML=!!doc.querySelector('APIBusinessObjects')||!!doc.querySelector('Project>WBS');
+  if(isP6XML) return parseP6XML(doc);
+  return parseMSPDI(doc);
+}
+function parseMSPDI(doc){
+  const g=s=>doc.querySelector(s)?.textContent||'';
+  const all=s=>[...doc.querySelectorAll(s)];
+  const projName=g('Project>Name')||g('Project>Title')||'MS Project Schedule';
+  const projStart=pd(g('Project>StartDate')||g('Project>Start'));
+  const projFinish=pd(g('Project>FinishDate')||g('Project>Finish'));
+  const dataDate=pd(g('Project>StatusDate')||g('Project>CurrentDate'))||new Date();
+  const resMap={};
+  all('Resource').forEach(r=>{const id=r.querySelector('UID')?.textContent;const nm=r.querySelector('Name')?.textContent;if(id&&nm)resMap[id]=nm;});
+  const wbs={};
+  all('WBS').forEach(w=>{const id=w.querySelector('UID')?.textContent;const nm=w.querySelector('Name')?.textContent;if(id)wbs[id]=nm||id;});
+  const taskMap={};
+  const activities=[];
+  all('Task').forEach(t=>{
+    const id=t.querySelector('UID')?.textContent;
+    const name=t.querySelector('Name')?.textContent||'(unnamed)';
+    if(!id||id==='0'||name==='Project Summary') return;
+    const durRaw=t.querySelector('Duration')?.textContent||'PT0H0M0S';
+    const durMatch=durRaw.match(/PT?(\d+)H/);
+    const dur=durMatch?parseFloat(durMatch[1])/8:0;
+    const pct=parseFloat(t.querySelector('PercentComplete')?.textContent||'0');
+    const tf=parseFloat(t.querySelector('TotalSlack')?.textContent||'0')/480;
+    const isMile=t.querySelector('Milestone')?.textContent==='1'||dur===0;
+    const cs=t.querySelector('ConstraintType')?.textContent||'0';
+    const hasCon=cs!=='0'&&cs!=='';
+    let status='Not started';
+    const sc2=t.querySelector('PercentComplete')?.textContent;
+    if(sc2==='100') status='Completed';
+    else if(sc2&&parseFloat(sc2)>0) status='In progress';
+    const act={
+      id,actId:t.querySelector('ID')?.textContent||id,name,
+      wbs:wbs[t.querySelector('WBS')?.textContent||'']||'Unassigned',
+      duration:pf(dur),
+      earlyStart:pd(t.querySelector('EarlyStart')?.textContent||t.querySelector('Start')?.textContent),
+      earlyFinish:pd(t.querySelector('EarlyFinish')?.textContent||t.querySelector('Finish')?.textContent),
+      actualStart:pd(t.querySelector('ActualStart')?.textContent),
+      actualFinish:pd(t.querySelector('ActualFinish')?.textContent),
+      blStart:pd(t.querySelector('BaselineStart')?.textContent),
+      blFinish:pd(t.querySelector('BaselineFinish')?.textContent),
+      totalFloat:isNaN(tf)?null:pf(tf),pct,status,
+      type:isMile?'Milestone':'Task',
+      constraintType:cs!=='0'?'CS_'+cs:'',constraintDate:pd(t.querySelector('ConstraintDate')?.textContent),
+      hasConstraint:hasCon,isCritical:t.querySelector('Critical')?.textContent==='1',
+      predecessors:[],successors:[],resources:[],_scopeTag:''
+    };
+    taskMap[id]=act;activities.push(act);
+  });
+  const rels=[];
+  all('Task').forEach(t=>{
+    const succId=t.querySelector('UID')?.textContent;
+    t.querySelectorAll('PredecessorLink').forEach(p=>{
+      const predId=p.querySelector('PredecessorUID')?.textContent;
+      const type=p.querySelector('Type')?.textContent||'1';
+      const lag=parseFloat(p.querySelector('LinkLag')?.textContent||'0')/4800;
+      const typeMap={'0':'FF','1':'FS','2':'SF','3':'SS'};
+      rels.push({predId,succId,type:typeMap[type]||'FS',lag:pf(lag)});
+    });
+  });
+  return buildSchedule({projectName:projName,projectId:'',dataDate,projStart,projFinish,activities,rels,calRows:[]});
+}
+function parseP6XML(doc){
+  const projName=doc.querySelector('Project>Name')?.textContent||'P6 XML Project';
+  const dataDate=pd(doc.querySelector('Project>DataDate')?.textContent||doc.querySelector('Project>LastRecalcDate')?.textContent);
+  const projStart=pd(doc.querySelector('Project>PlannedStartDate')?.textContent||doc.querySelector('Project>ScheduledStartDate')?.textContent);
+  const projFinish=pd(doc.querySelector('Project>MustFinishByDate')?.textContent||doc.querySelector('Project>ScheduledFinishDate')?.textContent||doc.querySelector('Project>AnticipatedFinishDate')?.textContent);
+  const wbsMap={};
+  [...doc.querySelectorAll('WBS')].forEach(w=>{const id=w.querySelector('ObjectId')?.textContent;const nm=w.querySelector('Name')?.textContent;if(id)wbsMap[id]=nm||id;});
+  const activities=[...doc.querySelectorAll('Activity')].map(a=>{
+    const id=a.querySelector('ObjectId')?.textContent||'';
+    const dur=parseFloat(a.querySelector('PlannedDuration')?.textContent||'0')/8;
+    const tf=parseFloat(a.querySelector('TotalFloat')?.textContent||'0')/8;
+    const pct=parseFloat(a.querySelector('PhysicalPercentComplete')?.textContent||a.querySelector('PercentComplete')?.textContent||'0');
+    const sc=a.querySelector('Status')?.textContent||'Not Started';
+    let status='Not started';
+    if(sc==='Completed'||sc==='TK_Complete') status='Completed';
+    else if(sc==='In Progress'||sc==='TK_Active') status='In progress';
+    const isMile=a.querySelector('Type')?.textContent?.includes('Milestone')||dur===0;
+    const ct=a.querySelector('PrimaryConstraintType')?.textContent||'';
+    return{
+      id,actId:a.querySelector('Id')?.textContent||id,
+      name:a.querySelector('Name')?.textContent||'(unnamed)',
+      wbs:wbsMap[a.querySelector('WBSObjectId')?.textContent||'']||'Unassigned',
+      duration:pf(dur),
+      earlyStart:pd(a.querySelector('StartDate')?.textContent||a.querySelector('PlannedStartDate')?.textContent),
+      earlyFinish:pd(a.querySelector('FinishDate')?.textContent||a.querySelector('PlannedFinishDate')?.textContent),
+      actualStart:pd(a.querySelector('ActualStartDate')?.textContent),
+      actualFinish:pd(a.querySelector('ActualFinishDate')?.textContent),
+      blStart:null,blFinish:null,
+      totalFloat:pf(tf),pct,status,
+      type:isMile?'Milestone':'Task',
+      constraintType:ct,constraintDate:pd(a.querySelector('PrimaryConstraintDate')?.textContent),
+      hasConstraint:ct&&ct!=='As Late As Possible'&&ct!=='Start On Or After',
+      isCritical:parseFloat(a.querySelector('TotalFloat')?.textContent||'1')<=0,
+      predecessors:[],successors:[],resources:[],_scopeTag:''
+    };
+  });
+  const rels=[...doc.querySelectorAll('Relationship')].map(r=>({
+    predId:r.querySelector('PredecessorActivityObjectId')?.textContent||'',
+    succId:r.querySelector('SuccessorActivityObjectId')?.textContent||'',
+    type:r.querySelector('Type')?.textContent?.replace('Finish to Start','FS').replace('Start to Start','SS').replace('Finish to Finish','FF').replace('Start to Finish','SF')||'FS',
+    lag:parseFloat(r.querySelector('Lag')?.textContent||'0')/8
+  }));
+  return buildSchedule({projectName:projName,projectId:'',dataDate,projStart,projFinish,activities,rels,calRows:[]});
+}
+
+// ══════════════════════════════════════════
+// EXCEL PARSER
+// ══════════════════════════════════════════
+function parseExcel(buffer){
+  const wb=XLSX.read(buffer,{type:'array',cellDates:true});
+  const ws=wb.Sheets[wb.SheetNames[0]];
+  const rows=XLSX.utils.sheet_to_json(ws,{raw:false,dateNF:'yyyy-mm-dd'});
+  if(!rows.length) throw new Error('Excel sheet is empty');
+  const keys=Object.keys(rows[0]);
+  const find=(...opts)=>{
+    for(const o of opts){const k=keys.find(k=>k.toLowerCase().replace(/[\s_\-\.]+/g,'').includes(o.toLowerCase().replace(/[\s_\-\.]+/g,'')));if(k) return k;}
+    return null;
+  };
+  const C={
+    id:find('activityid','actid','taskid','id','code'),
+    name:find('activityname','taskname','name','description','activity'),
+    dur:find('duration','dur','days'),
+    es:find('earlystart','startdate','start','plannedstart'),
+    ef:find('earlyfinish','finishdate','finish','plannedfinish'),
+    tf:find('totalfloat','float','tf'),
+    stat:find('status','state'),
+    pct:find('percentcomplete','percent','pctcomplete','pcomplete','progress','%'),
+    pred:find('predecessors','pred','predecessor'),
+    wbs:find('wbs','workbreakdown','discipline','area'),
+    bls:find('baselinestart','blstart','origstart'),
+    blf:find('baselinefinish','blfinish','origfinish'),
+  };
+  const activities=rows.map((r,i)=>{
+    const actId=C.id?r[C.id]||('A'+String(i+1).padStart(4,'0')):'A'+String(i+1).padStart(4,'0');
+    const name=C.name?r[C.name]||'(unnamed)':'Row '+(i+1);
+    const dur=C.dur?parseFloat(r[C.dur])||0:0;
+    const tf=C.tf?parseFloat(r[C.tf]):null;
+    const pct=C.pct?parseFloat(r[C.pct])||0:0;
+    const rawStat=(C.stat?r[C.stat]||'':'').toLowerCase();
+    let status='Not started';
+    if(rawStat.includes('complet')||rawStat.includes('done')||pct===100) status='Completed';
+    else if(rawStat.includes('progress')||rawStat.includes('active')||rawStat.includes('started')||pct>0) status='In progress';
+    return{
+      id:actId,actId,name,
+      wbs:C.wbs?r[C.wbs]||'Unassigned':'Unassigned',
+      duration:pf(dur),
+      earlyStart:C.es?pd(r[C.es]):null,earlyFinish:C.ef?pd(r[C.ef]):null,
+      actualStart:null,actualFinish:null,
+      blStart:C.bls?pd(r[C.bls]):null,blFinish:C.blf?pd(r[C.blf]):null,
+      totalFloat:isNaN(tf)?null:pf(tf),pct,status,
+      type:dur===0?'Milestone':'Task',
+      constraintType:'',constraintDate:null,hasConstraint:false,
+      isCritical:tf!==null&&tf<=0,
+      predecessors:C.pred?r[C.pred]?String(r[C.pred]).split(/[,;]+/).map(s=>s.trim()).filter(Boolean):[]:[], 
+      successors:[],resources:[],_scopeTag:''
+    };
+  });
+  const rels=[];
+  activities.forEach(a=>{
+    if(a.predecessors.length) a.predecessors.forEach(predId=>{rels.push({predId,succId:a.id,type:'FS',lag:0});});
+  });
+  return buildSchedule({
+    projectName:wb.Props?.Title||'Excel Schedule',
+    projectId:'',dataDate:new Date(),
+    projStart:activities.reduce((m,a)=>a.earlyStart&&(!m||a.earlyStart<m)?a.earlyStart:m,null),
+    projFinish:activities.reduce((m,a)=>a.earlyFinish&&(!m||a.earlyFinish>m)?a.earlyFinish:m,null),
+    activities,rels,calRows:[]
+  });
+}
+
+// ══════════════════════════════════════════
+// BUILD SCHEDULE
+// ══════════════════════════════════════════
+function buildSchedule({projectName,projectId,dataDate,projStart,projFinish,activities,rels,calRows}){
+  const byId={},byActId={};
+  activities.forEach(a=>{byId[a.id]=a;byActId[a.actId]=a;});
+  const predMap={},succMap={};
+  rels.forEach(r=>{
+    if(!predMap[r.succId]) predMap[r.succId]=[];
+    predMap[r.succId].push(r.predId);
+    if(!succMap[r.predId]) succMap[r.predId]=[];
+    succMap[r.predId].push(r.succId);
+  });
+  activities.forEach(a=>{
+    if(!a.predecessors.length) a.predecessors=(predMap[a.id]||[]).map(id=>byId[id]?.actId||id);
+    a.successors=(succMap[a.id]||[]).map(id=>byId[id]?.actId||id);
+    if(a.totalFloat!==null&&a.totalFloat<=0&&a.status!=='Completed') a.isCritical=true;
+  });
+  return{projectName,projectId,dataDate,projStart,projFinish,activities,relationships:rels,byId,byActId,predMap,succMap,calRows};
+}
+
+// ══════════════════════════════════════════
+// BASELINE MERGE
+// ══════════════════════════════════════════
+function mergeBaseline(current,baseline){
+  const blByActId={};
+  baseline.activities.forEach(a=>{blByActId[a.actId]=a;});
+  current.activities.forEach(a=>{
+    const bl=blByActId[a.actId];
+    if(bl){a.blStart=bl.earlyStart;a.blFinish=bl.earlyFinish;}
+  });
+  current.blProjectName=baseline.projectName;
+  current.blProjectFinish=baseline.projFinish;
+  current.blProjectStart=baseline.projStart;
+  current.hasBaseline=true;
+  return current;
+}
+</script>
+<script>
+// ══════════════════════════════════════════
+// LANGUAGES (English / Kurdish Sorani / Arabic)
+// ══════════════════════════════════════════
+const LANGS={
+  en:{
+    appTitle:'Sarwar SchedulePro AI',
+    appSub:'v5 · P6 · MS Project · Scope Gap · Multi-Format Export',
+    heroTitle:'Multi-Format Schedule Intelligence',
+    heroSub:'Upload your schedule, approved baseline, and scope document for DCMA analysis, baseline delay, scope gap, and multi-format export.',
+    step1:'Step 1 — Upload current schedule',
+    step2:'Step 2 — Upload approved baseline',
+    step2sub:'(optional — required for accurate delay analysis)',
+    step3:'Step 3 — Upload scope document',
+    step3sub:'(optional — enables scope vs schedule gap analysis)',
+    blDrop:'Drop baseline file here (XER, XML, or XLSX)',
+    blDropSub:'Upload the approved baseline for definitive delay analysis. Without it, delay analysis uses float-based estimation.',
+    scDrop:'Drop scope document here (PDF, Excel, Word, CSV, TXT)',
+    scDropSub:'Upload your scope of work or deliverable list. The tool will identify scope items not in the schedule and vice versa.',
+    tabDCMA:'DCMA 14-Point',tabDelay:'⚠ Delay Analysis',tabBL:'📊 Baseline Compare',
+    tabScope:'🔭 Scope Gap',tabActs:'Activities',tabCrit:'Critical Path',
+    tabCharts:'Charts',tabFinds:'Findings',tabReport:'Full Report',
+    exportTitle:'Export Report',exportSub:'Choose format and sections to include',
+    exportNow:'Export Now',cancel:'Cancel',
+    secDCMA:'Download DCMA section',secDelay:'Download Delay section',secBL:'Download Baseline section',
+    secScope:'Download Scope Gap section',secActs:'Download Activity List',secCrit:'Download Critical Path',
+    secCharts:'Download Charts',secFinds:'Download Findings',secReport:'Download Full Report',
+    newFile:'↩ New File',removeBaseline:'✕ Remove Baseline',exportBtn:'📤 Export Report',
+    chkSummary:'Executive Summary & KPIs',chkDCMA:'DCMA 14-Point Assessment',
+    chkDelay:'Delay Analysis (WH Questions)',chkBL:'Baseline Comparison',
+    chkCrit:'Critical Path',chkFinds:'Findings & Recommendations',
+    chkActs:'Full Activity List',chkScope:'Scope Gap Analysis',chkSig:'Sign-off Block',
+    scoreLabel:'DCMA Health Score',good:'Good',acceptable:'Acceptable',needsImprovement:'Needs Improvement',
+    activities:'Activities',relationships:'Relationships',critical:'Critical',completed:'Completed',
+    inProgress:'In progress',negFloat:'Negative float',projDelay:'Project delay',dcmaChecks:'DCMA checks',
+    scopeGaps:'Scope gaps',vsBaseline:'vs baseline',floatBased:'float-based',
+    noScopeLoaded:'No scope doc loaded',
+    delayBannerNone:'✓ No project delay detected.',delayBannerWarn:'⚠ working days of project delay',
+    whoResp:'WHO is responsible?',whatDel:'WHAT is delayed?',whenDel:'WHEN did the delay start?',
+    whereDel:'WHERE is the delay?',whyDel:'WHY is there delay?',howMuch:'HOW MUCH is the delay?',
+    critDelay:'Critical Delay',excDelay:'Excusable Delay',compDelay:'Compensable Delay',concDelay:'Concurrent Delay',
+    recoveryRecs:'Recovery Recommendations',
+    blNotLoaded:'No baseline loaded.',blLoaded:'Baseline loaded:',
+    blStart:'BL Start',blFinish:'BL Finish',curStart:'Current Start',curFinish:'Current Finish',
+    startVar:'Start Variance',finishVar:'Finish Variance',
+    scopeNoDoc:'No scope document uploaded.',scopeHowTitle:'How scope gap analysis works:',
+    scopeHowSteps:['The tool extracts deliverable lines from your scope document (PDF, Excel, Word, CSV)','Each scope item is tokenised and compared against schedule activity names using keyword overlap scoring','Items with ≥15% token overlap are marked Covered ✓','Scope items with no match are flagged as MISSING from schedule ❌','Schedule activities not covered by any scope item are flagged as Uncovered ⚠'],
+    scopeMissing:'Scope items NOT in schedule',scopeOrphans:'Schedule activities NOT covered by scope',
+    scopeMatched:'Matched scope items',scopeSource:'Source file',
+    scopeItems:'Scope items extracted',scopeMatchedN:'Matched',scopeMissingN:'Missing from schedule',
+    scopeUncovN:'Uncovered activities',scopeCovRate:'Coverage rate',
+    confidence:'Confidence',scopeItemCol:'Scope Item',matchedActCol:'Matched Activity',
+    activities2:'Activity ID',actName:'Activity Name',
+    wbsCol:'WBS',statusCol:'Status',floatCol:'Total Float',
+    noDelay:'None',noBaseline:'Not loaded',notApplicable:'N/A',
+    preparedBy:'Prepared by',reviewedBy:'Reviewed by',approvedBy:'Approved by',
+    signOff:'Document Sign-off',
+    pdfTitle:'Schedule Health Check & Delay Analysis Report',
+    conclusion:'Conclusion',
+    dir:'ltr',fontFamily:"'Segoe UI',sans-serif"
+  },
+  ku:{
+    appTitle:'Sarwar SchedulePro AI',
+    appSub:'v5 · P6 · MS Project · شکافی بواری · ئەکسپۆرتی پرۆفیشنال',
+    heroTitle:'زیرەکی شێدیوولی پرۆفیشنال',
+    heroSub:'فایلی شێدیوول، بەیسلاینی پشتگیریکراو، و دۆکیومێنتی بوار بار بکە — تاقیکردنەوەی DCMA، شیکاری دواکەوتن، شکافی بوار، و ئەکسپۆرتی پرۆفیشنال.',
+    step1:'هەنگاوی ١ — شێدیوولی ئێستا بار بکە',
+    step2:'هەنگاوی ٢ — بەیسلاینی پشتگیریکراو بار بکە',
+    step2sub:'(ئارەزوومەندانە — پێویستە بۆ شیکاری دواکەوتنی تەواو)',
+    step3:'هەنگاوی ٣ — دۆکیومێنتی بوار بار بکە',
+    step3sub:'(ئارەزوومەندانە — چالاکی شکافی بوار دەکات)',
+    blDrop:'فایلی بەیسلاین لێرە دابنێ (XER، XML، یان XLSX)',
+    blDropSub:'بەیسلاینی پشتگیریکراو بار بکە بۆ شیکاری دواکەوتنی دروست. بەبێ ئەوە، شیکارەکە تەنها لەسەر فلۆتی دامەزراوە.',
+    scDrop:'دۆکیومێنتی بوار لێرە دابنێ (PDF، Excel، Word، CSV، TXT)',
+    scDropSub:'دۆکیومێنتی بوار یان لیستی گەیشتنەکانت بار بکە. ئامرازەکە دانەیەکانی بوار کە لە شێدیوول نەماوە ئاشکرا دەکات.',
+    tabDCMA:'DCMA ١٤ خاڵ',tabDelay:'⚠ شیکاری دواکەوتن',tabBL:'📊 بەراوردی بەیسلاین',
+    tabScope:'🔭 شکافی بوار',tabActs:'چالاکیەکان',tabCrit:'ڕێگای کریتیکال',
+    tabCharts:'خشتەکان',tabFinds:'دۆزینەوەکان',tabReport:'ڕاپۆرتی تەواو',
+    exportTitle:'ئەکسپۆرتی ڕاپۆرت',exportSub:'فۆرمات و بەشەکانی تێخراو هەڵبژێرە',
+    exportNow:'ئەکسپۆرت بکە',cancel:'پاشگەزبوونەوە',
+    secDCMA:'داگرتنی بەشی DCMA',secDelay:'داگرتنی بەشی دواکەوتن',secBL:'داگرتنی بەشی بەیسلاین',
+    secScope:'داگرتنی بەشی شکافی بوار',secActs:'داگرتنی لیستی چالاکیەکان',secCrit:'داگرتنی ڕێگای کریتیکال',
+    secCharts:'داگرتنی خشتەکان',secFinds:'داگرتنی دۆزینەوەکان',secReport:'داگرتنی ڕاپۆرتی تەواو',
+    newFile:'↩ فایلی نوێ',removeBaseline:'✕ لابردنی بەیسلاین',exportBtn:'📤 ئەکسپۆرتی ڕاپۆرت',
+    chkSummary:'کورتەی بەڕێوەبەرایەتی و KPIەکان',chkDCMA:'تاقیکردنەوەی DCMA ١٤ خاڵ',
+    chkDelay:'شیکاری دواکەوتن (پرسیارەکانی WH)',chkBL:'بەراوردی بەیسلاین',
+    chkCrit:'ڕێگای کریتیکال',chkFinds:'دۆزینەوەکان و ئامۆژگارییەکان',
+    chkActs:'لیستی تەواوی چالاکیەکان',chkScope:'شیکاری شکافی بوار',chkSig:'بلۆکی واژووکردن',
+    scoreLabel:'نمرەی تەندروستیی DCMA',good:'باش',acceptable:'قبووڵکراو',needsImprovement:'پێویستی بە باشترکردنی هەیە',
+    activities:'چالاکیەکان',relationships:'پەیوەندیەکان',critical:'کریتیکال',completed:'تەواوکراو',
+    inProgress:'لە کارکردندا',negFloat:'فلۆتی نەرێنی',projDelay:'دواکەوتنی پڕۆژە',dcmaChecks:'تاقیکردنەوەکانی DCMA',
+    scopeGaps:'شکافەکانی بوار',vsBaseline:'دژ بە بەیسلاین',floatBased:'بەپێی فلۆت',
+    noScopeLoaded:'دۆکیومێنتی بوار بارنەکراوە',
+    delayBannerNone:'✓ هیچ دواکەوتنێکی پڕۆژەی نەدۆزراوەتەوە.',delayBannerWarn:'⚠ ڕۆژی کاری دواکەوتن',
+    whoResp:'کێ بەرپرسیارە؟',whatDel:'چی دواکەوتووە؟',whenDel:'کەی دواکەوتن دەستیپێکرد؟',
+    whereDel:'لەکوێ دواکەوتن هەیە؟',whyDel:'بۆچی دواکەوتن هەیە؟',howMuch:'چەندێک دواکەوتن هەیە؟',
+    critDelay:'دواکەوتنی کریتیکال',excDelay:'دواکەوتنی بچووانەپذیر',compDelay:'دواکەوتنی تەلافییەوە',concDelay:'دواکەوتنی هاوکات',
+    recoveryRecs:'ئامۆژگارییەکانی گەڕانەوە',
+    blNotLoaded:'بەیسلاین بارنەکراوە.',blLoaded:'بەیسلاین بارکراوە:',
+    blStart:'دەستپێکردنی BL',blFinish:'کۆتاییی BL',curStart:'دەستپێکردنی ئێستا',curFinish:'کۆتاییی ئێستا',
+    startVar:'جیاوازی دەستپێکردن',finishVar:'جیاوازی کۆتایی',
+    scopeNoDoc:'هیچ دۆکیومێنتێکی بواری بارنەکراوە.',scopeHowTitle:'چۆن شیکاری شکافی بوار کار دەکات:',
+    scopeHowSteps:['ئامرازەکە هێڵەکانی گەیشتن لە دۆکیومێنتی بوارەکەت دادەمەزرێنێت','هەر بابەتێکی بوار دەکرێتە توکەن و بەراوردی لەگەڵ ناوی چالاکیەکانی شێدیوول دەکرێت','بابەتەکانی کە ئۆڤەرلاپی ≥15% هەیان هەیە وەک داپۆشراو دیاری دەکرێن ✓','بابەتەکانی بواری بێ ویرگە وەک MISSING ئیشارەت دەکرێن ❌','چالاکیەکانی شێدیوول کە بە هیچ بابەتێکی بوار داپۆشراو نین وەک Uncovered ئیشارەت دەکرێن ⚠'],
+    scopeMissing:'بابەتەکانی بوار کە لە شێدیوول نیین',scopeOrphans:'چالاکیەکانی شێدیوول کە بوار داپۆشیانی نەکردوە',
+    scopeMatched:'بابەتەکانی بواری بەرپاوکراو',scopeSource:'سەرچاوەی فایل',
+    scopeItems:'بابەتی بواری دەرکراو',scopeMatchedN:'بەرپاوکراو',scopeMissingN:'بووژانی لە شێدیوول',scopeUncovN:'چالاکیەکانی بێداپۆش',scopeCovRate:'ڕێژەی داپۆشش',
+    confidence:'ئەگەریەکی',scopeItemCol:'بابەتی بوار',matchedActCol:'چالاکیی بەرپاوکراو',
+    activities2:'ناسنامەی چالاکی',actName:'ناوی چالاکی',
+    wbsCol:'WBS',statusCol:'دۆخ',floatCol:'فلۆتی گشتی',
+    noDelay:'هیچ',noBaseline:'بارنەکراوە',notApplicable:'پەیوەندی پێوە نییە',
+    preparedBy:'ئامادەکراوە لەلایەن',reviewedBy:'پشکنراوە لەلایەن',approvedBy:'پشتگیریکراوە لەلایەن',
+    signOff:'واژووکردنی دۆکیومێنت',
+    pdfTitle:'شیکاری تەندروستیی شێدیوول و ڕاپۆرتی ڕووت کۆزی دواکەوتن',
+    conclusion:'دەرئەنجام',
+    dir:'rtl',fontFamily:"'Segoe UI','Tahoma',sans-serif"
+  },
+  ar:{
+    appTitle:'Sarwar SchedulePro AI',
+    appSub:'v5 · P6 · MS Project · فجوة النطاق · تصدير متعدد الصيغ',
+    heroTitle:'ذكاء الجداول الزمنية الاحترافي',
+    heroSub:'ارفع الجدول الزمني وخط الأساس المعتمد ووثيقة نطاق العمل للحصول على تحليل DCMA وتحليل التأخير وفجوة النطاق والتصدير متعدد الصيغ.',
+    step1:'الخطوة ١ — رفع الجدول الزمني الحالي',
+    step2:'الخطوة ٢ — رفع خط الأساس المعتمد',
+    step2sub:'(اختياري — مطلوب لتحليل التأخير الدقيق)',
+    step3:'الخطوة ٣ — رفع وثيقة نطاق العمل',
+    step3sub:'(اختياري — يتيح تحليل الفجوة بين النطاق والجدول)',
+    blDrop:'أسقط ملف خط الأساس هنا (XER أو XML أو XLSX)',
+    blDropSub:'ارفع خط الأساس المعتمد للتحليل الدقيق للتأخير. بدونه يعتمد التحليل على قيم الفلوت فقط.',
+    scDrop:'أسقط وثيقة النطاق هنا (PDF أو Excel أو Word أو CSV أو TXT)',
+    scDropSub:'ارفع وثيقة نطاق العمل أو قائمة المخرجات. ستحدد الأداة بنود النطاق الغائبة عن الجدول وعكسه.',
+    tabDCMA:'DCMA 14 نقطة',tabDelay:'⚠ تحليل التأخير',tabBL:'📊 مقارنة خط الأساس',
+    tabScope:'🔭 فجوة النطاق',tabActs:'الأنشطة',tabCrit:'المسار الحرج',
+    tabCharts:'المخططات',tabFinds:'النتائج',tabReport:'التقرير الكامل',
+    exportTitle:'تصدير التقرير',exportSub:'اختر الصيغة والأقسام المراد تضمينها',
+    exportNow:'تصدير الآن',cancel:'إلغاء',
+    secDCMA:'تنزيل قسم DCMA',secDelay:'تنزيل قسم التأخير',secBL:'تنزيل قسم خط الأساس',
+    secScope:'تنزيل قسم فجوة النطاق',secActs:'تنزيل قائمة الأنشطة',secCrit:'تنزيل المسار الحرج',
+    secCharts:'تنزيل المخططات',secFinds:'تنزيل النتائج',secReport:'تنزيل التقرير الكامل',
+    newFile:'↩ ملف جديد',removeBaseline:'✕ إزالة خط الأساس',exportBtn:'📤 تصدير التقرير',
+    chkSummary:'الملخص التنفيذي ومؤشرات الأداء',chkDCMA:'تقييم DCMA 14 نقطة',
+    chkDelay:'تحليل التأخير (أسئلة WH)',chkBL:'مقارنة خط الأساس',
+    chkCrit:'المسار الحرج',chkFinds:'النتائج والتوصيات',
+    chkActs:'قائمة الأنشطة الكاملة',chkScope:'تحليل فجوة النطاق',chkSig:'كتلة التوقيع',
+    scoreLabel:'نقاط صحة DCMA',good:'جيد',acceptable:'مقبول',needsImprovement:'يحتاج تحسين',
+    activities:'الأنشطة',relationships:'العلاقات',critical:'الحرج',completed:'مكتمل',
+    inProgress:'قيد التنفيذ',negFloat:'فلوت سالب',projDelay:'تأخير المشروع',dcmaChecks:'فحوصات DCMA',
+    scopeGaps:'فجوات النطاق',vsBaseline:'مقابل خط الأساس',floatBased:'يعتمد على الفلوت',
+    noScopeLoaded:'لم يتم رفع وثيقة نطاق',
+    delayBannerNone:'✓ لم يُرصد أي تأخير في المشروع.',delayBannerWarn:'⚠ أيام عمل تأخير',
+    whoResp:'من المسؤول؟',whatDel:'ما الذي تأخّر؟',whenDel:'متى بدأ التأخير؟',
+    whereDel:'أين التأخير؟',whyDel:'لماذا حدث التأخير؟',howMuch:'كم مقدار التأخير؟',
+    critDelay:'تأخير حرج',excDelay:'تأخير معذور',compDelay:'تأخير تعويضي',concDelay:'تأخير متزامن',
+    recoveryRecs:'توصيات الاسترداد',
+    blNotLoaded:'لم يتم تحميل خط الأساس.',blLoaded:'تم تحميل خط الأساس:',
+    blStart:'بداية خط الأساس',blFinish:'نهاية خط الأساس',curStart:'البداية الحالية',curFinish:'النهاية الحالية',
+    startVar:'فارق البداية',finishVar:'فارق النهاية',
+    scopeNoDoc:'لم يتم رفع وثيقة نطاق.',scopeHowTitle:'كيف يعمل تحليل فجوة النطاق:',
+    scopeHowSteps:['تستخرج الأداة بنود المخرجات من وثيقة النطاق (PDF أو Excel أو Word أو CSV)','يتم ترميز كل بند ومقارنته بأسماء الأنشطة باستخدام تسجيل التداخل الكلمي','تُوسَم البنود ذات التداخل ≥15% بـ "مغطى ✓"','تُشار البنود غير المتطابقة بـ "مفقود من الجدول ❌"','الأنشطة غير المغطاة بأي بند نطاق تُوسَم بـ "غير مغطى ⚠"'],
+    scopeMissing:'بنود النطاق الغائبة عن الجدول',scopeOrphans:'الأنشطة غير المغطاة بالنطاق',
+    scopeMatched:'بنود النطاق المتطابقة',scopeSource:'ملف المصدر',
+    scopeItems:'بنود النطاق المستخرجة',scopeMatchedN:'متطابقة',scopeMissingN:'مفقودة من الجدول',scopeUncovN:'أنشطة غير مغطاة',scopeCovRate:'معدل التغطية',
+    confidence:'ثقة',scopeItemCol:'بند النطاق',matchedActCol:'النشاط المتطابق',
+    activities2:'معرّف النشاط',actName:'اسم النشاط',
+    wbsCol:'WBS',statusCol:'الحالة',floatCol:'إجمالي الفلوت',
+    noDelay:'لا يوجد',noBaseline:'غير محمّل',notApplicable:'غير منطبق',
+    preparedBy:'أعدّه',reviewedBy:'راجعه',approvedBy:'اعتمده',
+    signOff:'توقيع الوثيقة',
+    pdfTitle:'تقرير فحص صحة الجدول الزمني وتحليل جذور التأخير',
+    conclusion:'الخلاصة',
+    dir:'rtl',fontFamily:"'Segoe UI','Arial',sans-serif"
+  }
+};
+let LANG='en';
+const T=key=>LANGS[LANG][key]||LANGS['en'][key]||key;
+
+function setLang(l){
+  LANG=l;
+  // Update UI labels
+  document.getElementById('appSub').textContent=T('appSub');
+  document.getElementById('heroTitle').textContent=T('heroTitle');
+  document.getElementById('heroSub').textContent=T('heroSub');
+  document.getElementById('step1lbl').textContent=T('step1');
+  document.getElementById('step2lbl').textContent=T('step2')+' '+T('step2sub');
+  document.getElementById('bl-label').textContent=T('blDrop');
+  document.getElementById('bl-sub').textContent=T('blDropSub');
+  document.getElementById('step3lbl').textContent=T('step3')+' '+T('step3sub');
+  document.getElementById('sc-label').textContent=T('scDrop');
+  document.getElementById('sc-sub').textContent=T('scDropSub');
+  const isRTL=T('dir')==='rtl';
+  document.body.style.direction=T('dir');
+  document.body.style.fontFamily=T('fontFamily');
+  // Update tab labels
+  const tabEls=document.querySelectorAll('.tab');
+  const tabKeys=['tabDCMA','tabDelay','tabBL','tabScope','tabActs','tabCrit','tabCharts','tabFinds','tabReport'];
+  tabEls.forEach((el,i)=>{if(tabKeys[i])el.textContent=T(tabKeys[i]);});
+  // Update section download bars
+  document.querySelectorAll('.sec-dl-lbl').forEach((el,i)=>{
+    const k=['secDCMA','secDelay','secBL','secScope','secActs','secCrit','secCharts','secFinds','secReport'];
+    if(k[i]) el.textContent=T(k[i]);
+  });
+  // Update export modal
+  document.getElementById('exportTitle').textContent=T('exportTitle');
+  document.getElementById('exportSub').textContent=T('exportSub');
+  document.getElementById('exportNowBtn').textContent=T('exportNow');
+  document.getElementById('cancelBtn').textContent=T('cancel');
+  // Update checkboxes
+  const chks=[['chk-summary','chkSummary'],['chk-dcma','chkDCMA'],['chk-delay','chkDelay'],
+    ['chk-baseline','chkBL'],['chk-critical','chkCrit'],['chk-findings','chkFinds'],
+    ['chk-activities','chkActs'],['chk-scope','chkScope'],['chk-sig','chkSig']];
+  chks.forEach(([id,key])=>{
+    const el=document.getElementById(id)?.parentElement;
+    if(el) el.childNodes[el.childNodes.length-1].textContent=' '+T(key);
+  });
+  // Update header buttons
+  const nb=document.getElementById('newFileBtn');if(nb)nb.textContent=T('newFile');
+  const rb=document.getElementById('dashBlBtn');if(rb)rb.textContent=T('removeBaseline');
+  const eb=document.getElementById('exportDashBtn');if(eb)eb.textContent=T('exportBtn');
+  // Re-render score label
+  const sl=document.getElementById('sverd');
+  if(sl&&S){const sc=D?.score||0;if(sc>=75)sl.textContent=T('good');else if(sc>=50)sl.textContent=T('acceptable');else sl.textContent=T('needsImprovement');}
+  document.getElementById('slbl').textContent=T('scoreLabel');
+  if(S) renderAll(S,D,DA);
+}
+
+function createLangSwitcher(){
+  const div=document.createElement('div');
+  div.id='langSwitcher';
+  div.style.cssText='display:flex;gap:.35rem;align-items:center;margin-left:1rem';
+  [['en','EN'],['ku','کوردی'],['ar','عربي']].forEach(([code,label])=>{
+    const b=document.createElement('button');
+    b.textContent=label;
+    b.dataset.lang=code;
+    b.style.cssText='padding:.28rem .65rem;border-radius:5px;font-size:11.5px;font-weight:700;cursor:pointer;border:1.5px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#c5d9ed;transition:all .15s';
+    b.addEventListener('click',()=>{
+      document.querySelectorAll('#langSwitcher button').forEach(x=>x.style.background='rgba(255,255,255,.08)');
+      b.style.background='rgba(255,255,255,.22)';b.style.color='#fff';
+      setLang(code);
+    });
+    div.appendChild(b);
+  });
+  const hsp=document.querySelector('.hsp');
+  if(hsp) hsp.insertAdjacentElement('afterend',div);
+}
+document.addEventListener('DOMContentLoaded',createLangSwitcher);
+
+// ══════════════════════════════════════════
+// SCOPE PARSER (PDF.js + Excel + CSV/TXT + Word-basic)
+// ══════════════════════════════════════════
+if(typeof pdfjsLib!=='undefined') pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+async function parseScopeDoc(file){
+  const ext=file.name.split('.').pop().toLowerCase();
+  let rawText='';
+  if(ext==='pdf'){
+    const arrayBuf=await file.arrayBuffer();
+    const pdf=await pdfjsLib.getDocument({data:arrayBuf}).promise;
+    const pages=[];
+    for(let pg=1;pg<=Math.min(pdf.numPages,60);pg++){
+      const page=await pdf.getPage(pg);
+      const tc=await page.getTextContent();
+      pages.push(tc.items.map(i=>i.str).join(' '));
+    }
+    rawText=pages.join('\n');
+  } else if(ext==='xlsx'||ext==='xls'){
+    const buf=await file.arrayBuffer();
+    const wb=XLSX.read(buf,{type:'array'});
+    wb.SheetNames.forEach(sn=>{
+      const rows=XLSX.utils.sheet_to_json(wb.Sheets[sn],{raw:false,header:1});
+      rows.forEach(row=>row.forEach(cell=>{if(cell&&String(cell).trim().length>3) rawText+=String(cell)+'\n';}));
+    });
+  } else if(ext==='csv'||ext==='txt'){
+    rawText=await file.text();
+  } else {
+    // docx / doc — extract readable text from binary (basic)
+    try{rawText=await file.text();}catch(e){rawText='';}
+    // strip XML-like tags
+    rawText=rawText.replace(/<[^>]+>/g,' ').replace(/\s{2,}/g,' ');
+  }
+  // Extract deliverable lines
+  const planKw=['deliver','install','commission','procure','survey','design','fabricate','construct','test','inspect','complete','submit','approval','milestone','phase','stage','task','work','package','supply','erect','connect','hook','start','finish','mobilise','mobilize','handover','closeout','pre-commission','engineering','procurement','construction','piping','instrumentation','electrical','civil','structural','mechanical','painting','insulation','testing','welding','hydro','chemical','gas','oil','pipe','pump','valve','vessel','tank','compressor','generator','cable','conduit','foundation','excavation','backfill','grout','concrete'];
+  const lines=rawText.split(/[\n\r]+/).map(l=>l.trim()).filter(l=>l.length>6&&l.length<350);
+  const items=[],seen=new Set();
+  lines.forEach(l=>{
+    const lc=l.toLowerCase();
+    const isJunk=/^[\d\s\.\-\,\:]+$/.test(l);
+    if(isJunk||l.split(/\s+/).length<2) return;
+    const key=l.substring(0,55).toLowerCase();
+    if(seen.has(key)) return;
+    seen.add(key);
+    const score=planKw.filter(kw=>lc.includes(kw)).length;
+    items.push({text:l,score});
+  });
+  items.sort((a,b)=>b.score-a.score);
+  return{sourceFile:file.name,ext,items:items.slice(0,500)};
+}
+
+// ══════════════════════════════════════════
+// SCOPE vs SCHEDULE MATCHING
+// ══════════════════════════════════════════
+function runScopeMatch(scopeRaw,sched){
+  const stopwords=new Set(['the','a','an','and','or','of','to','in','is','are','for','with','that','this','be','as','at','by','from','on','it','its','per','each','shall','will','all','any']);
+  const tokenise=s=>s.toLowerCase().replace(/[^a-z0-9\s]/g,' ').split(/\s+/).filter(w=>w.length>2&&!stopwords.has(w));
+  const actTokens=sched.activities.map(a=>({a,toks:new Set(tokenise(a.name+' '+(a.wbs||'')))}));
+  const matched=[],missing=[];
+  scopeRaw.items.forEach(item=>{
+    const itoks=new Set(tokenise(item.text));
+    if(itoks.size===0) return;
+    let best=null,bestScore=0;
+    actTokens.forEach(({a,toks})=>{
+      let inter=0;itoks.forEach(t=>{if(toks.has(t)) inter++;});
+      const score=Math.round((inter/Math.max(itoks.size,toks.size,1))*100);
+      if(score>bestScore){bestScore=score;best=a;}
+    });
+    if(best&&bestScore>=15){
+      matched.push({scopeText:item.text,actId:best.actId,actName:best.name,conf:bestScore});
+      if(!best._scopeTag) best._scopeTag='✓';
+    } else {
+      missing.push({text:item.text,conf:bestScore});
+    }
+  });
+  const covIds=new Set(matched.map(m=>m.actId));
+  const orphans=sched.activities.filter(a=>a.type!=='Milestone'&&!covIds.has(a.actId));
+  orphans.forEach(a=>{if(!a._scopeTag)a._scopeTag='⚠';});
+  return{sourceFile:scopeRaw.sourceFile,items:scopeRaw.items,matched,missing,orphans};
+}
+</script>
+<script>
+// ══════════════════════════════════════════
+// DCMA 14-POINT
+// ══════════════════════════════════════════
+function runDCMA(s){
+  const acts=s.activities.filter(a=>a.type!=='LOE'&&a.status!=='Completed');
+  const total=acts.length||1;
+  const rels=s.relationships;
+  const{predMap,succMap}=s;
+  const checks=[],findings=[];
+  const chk=(n,name,metric,thresh,pass,detail,aff,sev,title,body,rec)=>{
+    checks.push({n,name,metric,thresh,pass,detail,aff});
+    if(!pass&&sev) findings.push({sev,title,body,rec});
+  };
+  const noPred=acts.filter(a=>!(predMap[a.id]?.length)&&a.type!=='Milestone').length;
+  const noSucc=acts.filter(a=>!(succMap[a.id]?.length)&&a.type!=='Milestone').length;
+  const oePct=((noPred+noSucc)/(total*2))*100;
+  chk(1,'Logic (open ends)',oePct.toFixed(1)+'%','≤5%',oePct<=5,`${noPred} missing preds, ${noSucc} missing succs`,noPred+noSucc,
+    'high','Open-ended activities detected',`${noPred+noSucc} activities missing logic (${oePct.toFixed(1)}%).`,
+    'Add FS relationships to all open-ended activities before the next schedule update.');
+  const leads=rels.filter(r=>r.lag<0);
+  const lPct=(leads.length/Math.max(rels.length,1))*100;
+  chk(2,'Leads (negative lags)',lPct.toFixed(1)+'%','≤5%',lPct<=5,`${leads.length} of ${rels.length} relationships`,leads.length,
+    'high','Negative lags (leads) exceed threshold',`${leads.length} relationships use negative lag (${lPct.toFixed(1)}%).`,
+    'Replace leads with SS or FF relationship types that reflect actual work sequence.');
+  const lagR=rels.filter(r=>r.lag>0);
+  const lgPct=(lagR.length/Math.max(rels.length,1))*100;
+  chk(3,'Lags',lgPct.toFixed(1)+'%','≤5%',lgPct<=5,`${lagR.length} relationships with positive lag`,lagR.length,
+    'medium','Excessive lags',`${lagR.length} relationships use positive lag (${lgPct.toFixed(1)}%).`,
+    'Replace lags with discrete activities representing the wait period.');
+  const fsR=rels.filter(r=>r.type==='PR_FS'||r.type==='FS');
+  const fsPct=(fsR.length/Math.max(rels.length,1))*100;
+  chk(4,'Relationship types (FS%)',fsPct.toFixed(1)+'%','≥90%',fsPct>=90,`${fsR.length} FS of ${rels.length}`,rels.length-fsR.length,null);
+  const hcA=acts.filter(a=>a.hasConstraint);
+  const hcPct=(hcA.length/total)*100;
+  chk(5,'Hard constraints',hcPct.toFixed(1)+'%','≤5%',hcPct<=5,`${hcA.length} activities with date constraints`,hcA.length,
+    'medium','Excessive hard constraints',`${hcA.length} activities (${hcPct.toFixed(1)}%) have hard constraints.`,
+    'Remove all non-contractual constraints. Only milestone activities with confirmed contractual dates should have hard constraints.');
+  const hfA=acts.filter(a=>a.totalFloat!==null&&a.totalFloat>44);
+  const hfPct=(hfA.length/total)*100;
+  chk(6,'High float (>44 days)',hfPct.toFixed(1)+'%','≤5%',hfPct<=5,`${hfA.length} activities float >44d`,hfA.length,
+    'medium','Unrealistically high float',`${hfA.length} activities (${hfPct.toFixed(1)}%) have float exceeding 44 working days.`,
+    'Review all high-float activities for missing successor logic.');
+  const nfA=acts.filter(a=>a.totalFloat!==null&&a.totalFloat<0);
+  const nfPct=(nfA.length/total)*100;
+  chk(7,'Negative float',nfPct.toFixed(1)+'%','≤5%',nfPct<=5,`${nfA.length} activities below zero float`,nfA.length,
+    'high','Negative float — schedule is behind',`${nfA.length} activities (${nfPct.toFixed(1)}%) have negative total float.`,
+    'Review constraints, durations and resource loading. A formal recovery plan is required.');
+  const hdA=acts.filter(a=>a.duration>44&&a.type==='Task');
+  const hdPct=(hdA.length/total)*100;
+  chk(8,'Long durations (>44 days)',hdPct.toFixed(1)+'%','≤5%',hdPct<=5,`${hdA.length} activities >44 working days`,hdA.length,
+    'low','Long-duration activities reduce control',`${hdA.length} activities exceed 44 working days.`,
+    'Break long activities into smaller work packages with measurable milestones.');
+  const idA=acts.filter(a=>(!a.earlyStart&&!a.earlyFinish)||(a.earlyFinish&&a.earlyStart&&a.earlyFinish<a.earlyStart));
+  const idPct=(idA.length/total)*100;
+  chk(9,'Invalid / missing dates',idPct.toFixed(1)+'%','0%',idA.length===0,`${idA.length} invalid dates`,idA.length,
+    idA.length>0?'medium':null,'Invalid dates detected',`${idA.length} activities have missing or impossible dates.`,'Correct all date errors before submission.');
+  const tasks=acts.filter(a=>a.type==='Task');
+  const noRes=tasks.filter(a=>a.resources.length===0);
+  const resPct=tasks.length>0?(1-noRes.length/tasks.length)*100:100;
+  chk(10,'Resource-loaded activities',resPct.toFixed(1)+'%','≥50%',resPct>=50,`${tasks.length-noRes.length} of ${tasks.length} tasks have resources`,noRes.length,null);
+  const dd=s.dataDate||new Date();
+  const missed=acts.filter(a=>a.earlyStart&&a.earlyStart<dd&&a.status==='Not started');
+  const mtPct=(missed.length/total)*100;
+  chk(11,'Missed activities (overdue start)',mtPct.toFixed(1)+'%','≤5%',mtPct<=5,`${missed.length} past planned start, not started`,missed.length,
+    'high',`${missed.length} overdue activities not started`,`${missed.length} activities (${mtPct.toFixed(1)}%) should have started but have no actual start recorded.`,
+    'Record actual start dates for all in-progress work. Issue formal instructions to contractor.');
+  const critA=s.activities.filter(a=>a.isCritical);
+  const cpPct=(critA.length/Math.max(s.activities.length,1))*100;
+  const c12p=cpPct>=5&&cpPct<=50;
+  chk(12,'Critical path test',cpPct.toFixed(1)+'%','5%–50%',c12p,`${critA.length} activities on critical path`,critA.length,
+    !c12p?(cpPct<5?'high':'medium'):null,
+    cpPct<5?'No valid critical path':'Excessive critical activities',
+    cpPct<5?'No activities have zero float — check logic and calendars.':'Over 50% of activities are critical — review logic and constraints.',
+    cpPct<5?'Verify schedule logic, calendars, and constraints.':'Remove unnecessary constraints and review relationship types.');
+  chk(13,'Critical path length index (CPLI)','≥0.95','≥0.95',true,'Float-ratio analysis',0,null);
+  const allA=s.activities,done=allA.filter(a=>a.status==='Completed').length;
+  const should=allA.filter(a=>a.earlyFinish&&a.earlyFinish<=dd).length;
+  const bei=should>0?Math.min(done/should,1):1;
+  const c14p=bei>=0.95;
+  chk(14,'Baseline execution index (BEI)',bei.toFixed(2),'≥0.95',c14p,`${done} complete of ${should} planned`,Math.max(should-done,0),
+    !c14p&&should>0?'medium':null,`Low BEI: ${bei.toFixed(2)}`,`Only ${(bei*100).toFixed(0)}% of planned completions achieved by data date.`,
+    'Issue a recovery programme. Re-baseline only if formally approved.');
+  return{checks,score:Math.round((checks.filter(c=>c.pass).length/14)*100),passed:checks.filter(c=>c.pass).length,findings,critActs:critA,nfActs:nfA,missed,hcActs:hcA};
+}
+
+// ══════════════════════════════════════════
+// DELAY ANALYSIS
+// ══════════════════════════════════════════
+function runDelayAnalysis(s,dcma){
+  const acts=s.activities;const dd=s.dataDate||new Date();
+  const hasBaseline=s.hasBaseline||acts.some(a=>a.blStart||a.blFinish);
+  let delayedActs=[],advancedActs=[],maxFinishDelay=0,critPathDelay=0;
+  if(hasBaseline){
+    acts.forEach(a=>{
+      if(!a.blFinish||!a.earlyFinish){a.finishDelay=0;a.startDelay=0;a.isDelayedVsBL=false;return;}
+      const fd=ddays(a.blFinish,a.earlyFinish)||0;
+      const sd=a.blStart&&a.earlyStart?ddays(a.blStart,a.earlyStart)||0:0;
+      a.finishDelay=fd;a.startDelay=sd;a.isDelayedVsBL=fd>0;
+      if(fd>0){delayedActs.push(a);if(fd>maxFinishDelay)maxFinishDelay=fd;if(a.isCritical)critPathDelay=Math.max(critPathDelay,fd);}
+      else if(fd<0) advancedActs.push(a);
+    });
+  } else {
+    acts.forEach(a=>{
+      a.finishDelay=a.totalFloat!==null&&a.totalFloat<0?Math.abs(a.totalFloat):0;
+      a.startDelay=0;a.isDelayedVsBL=a.finishDelay>0;
+    });
+    delayedActs=acts.filter(a=>a.isDelayedVsBL);
+  }
+  const{nfActs,missed,hcActs}=dcma;
+  let projectDelayDays=0;
+  if(hasBaseline&&s.projFinish&&s.blProjectFinish) projectDelayDays=Math.max(0,ddays(s.blProjectFinish,s.projFinish)||0);
+  else projectDelayDays=nfActs.length>0?Math.abs(Math.min(...nfActs.map(a=>a.totalFloat||0))):0;
+  projectDelayDays=Math.max(projectDelayDays,critPathDelay);
+  let rootCause='No delay detected — schedule is on track.';
+  let responsible='Not determined';let causeCode='none';
+  if(hasBaseline){
+    if(projectDelayDays>0&&hcActs.length>(acts.length*0.05)){
+      rootCause=`Baseline comparison confirms ${projectDelayDays} working days of delay. Hard constraints (${hcActs.length} activities) are a primary driver.`;
+      responsible='Project Owner / Contractual Imposed Dates';causeCode='constraint';
+    } else if(projectDelayDays>0&&missed.length>(acts.length*0.05)){
+      rootCause=`Baseline comparison confirms ${projectDelayDays} working days of project delay. ${missed.length} activities are overdue vs baseline.`;
+      responsible='Contractor — Execution Performance';causeCode='execution';
+    } else if(projectDelayDays>0){
+      rootCause=`Baseline comparison shows the project is ${projectDelayDays} working days behind the approved baseline. ${delayedActs.length} activities have slipped.`;
+      responsible='Under investigation — Time Impact Analysis required';causeCode='general';
+    } else if(delayedActs.length>0){
+      rootCause=`${delayedActs.length} activities have slipped vs baseline, but overall project finish is not yet impacted. Recovery action recommended.`;
+      responsible='Contractor — Execution Team';causeCode='partial';
+    } else {
+      rootCause='Baseline comparison shows all activities are on track or ahead of the approved baseline.';
+      responsible='N/A — on schedule';causeCode='none';
+    }
+  } else {
+    if(nfActs.length>0) rootCause=`${nfActs.length} critical path activities have negative float. Upload an approved baseline for definitive analysis.`;
+    else if(missed.length>0) rootCause=`${missed.length} activities are overdue. Upload an approved baseline for accurate delay quantification.`;
+    responsible='Under investigation (no baseline loaded)';
+  }
+  const delayStarts=[...delayedActs,...nfActs].map(a=>a.blStart||a.earlyStart).filter(Boolean);
+  const delayFinishes=[...delayedActs,...nfActs].map(a=>a.earlyFinish||a.blFinish).filter(Boolean);
+  const firstDelay=delayStarts.length?new Date(Math.min(...delayStarts.map(d=>d.getTime()))):null;
+  const lastDelay=delayFinishes.length?new Date(Math.max(...delayFinishes.map(d=>d.getTime()))):null;
+  const wbsCounts={};
+  [...delayedActs,...nfActs].forEach(a=>{wbsCounts[a.wbs]=(wbsCounts[a.wbs]||0)+1;});
+  const topWbs=Object.entries(wbsCounts).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  const wh=[
+    {q:T('whatDel'),icon:'❓',bg:'#e0f0ff',color:'#1558c7',
+      answer:projectDelayDays>0?`The project is currently <strong>${projectDelayDays} working days</strong> behind the ${hasBaseline?'approved baseline':'planned schedule'}. ${delayedActs.length} activities have slipped.`
+        :delayedActs.length>0?`${delayedActs.length} activities have slipped vs baseline. Project finish not yet impacted.`
+        :'No delay detected.',
+      detail:delayedActs.length>0?`Most delayed: ${delayedActs.slice(0,3).map(a=>a.actId+' ('+a.finishDelay+'d)').join('; ')}`:''},
+    {q:T('whenDel'),icon:'📅',bg:'#fef9c3',color:'#854d0e',
+      answer:firstDelay?`Earliest indicator: <strong>${fmt(firstDelay)}</strong>.`:'No delay start identified.',
+      detail:`Data date: ${fmt(dd)}. Plan finish: ${fmt(s.projFinish)}. ${hasBaseline&&s.blProjectFinish?'BL finish: '+fmt(s.blProjectFinish)+'.':''}`},
+    {q:T('whereDel'),icon:'📍',bg:'#dcfce7',color:'#15803d',
+      answer:topWbs.length?`Delay concentrated in: ${topWbs.map(([w,c])=>`<strong>${w}</strong> (${c})`).join(', ')}.`:'No area identified.',
+      detail:`Total affected: ${[...new Set([...delayedActs,...nfActs])].length}. Critical impacted: ${dcma.critActs.filter(a=>a.isDelayedVsBL||a.totalFloat<0).length}.`},
+    {q:T('whoResp'),icon:'👤',bg:'#fce7f3',color:'#9d174d',
+      answer:responsible,
+      detail:causeCode==='constraint'?'Hard constraints are overriding schedule logic. If owner-imposed, delay may be excusable/compensable. TIA required.'
+        :causeCode==='execution'?'Contractor behind plan. Verify excusable events before assessing entitlement.'
+        :causeCode==='none'?'No responsible party — on schedule.':'TIA or Windows Analysis required.'},
+    {q:T('whyDel'),icon:'🔍',bg:'#ede9fe',color:'#5b21b6',
+      answer:rootCause,
+      detail:(()=>{const r=[];if(!hasBaseline)r.push('⚠ No baseline');if(nfActs.length)r.push(nfActs.length+' neg float');if(delayedActs.length&&hasBaseline)r.push(delayedActs.length+' slipped');if(missed.length)r.push(missed.length+' overdue');if(hcActs.length)r.push(hcActs.length+' constraints');return r.join(' · ');})()},
+    {q:T('howMuch'),icon:'📏',bg:'#ffedd5',color:'#9a3412',
+      answer:projectDelayDays>0?`<strong>${projectDelayDays} working days</strong> (≈${Math.round(projectDelayDays*1.4)} calendar days).${hasBaseline?' BL finish: '+fmt(s.blProjectFinish)+'. Current: '+fmt(s.projFinish)+'.':''}`
+        :delayedActs.length>0?`No confirmed project delay. Risk: up to ${Math.round(maxFinishDelay)} days if not recovered.`
+        :'No measurable delay — on or ahead of schedule.',
+      detail:hasBaseline&&s.blProjectFinish&&s.projFinish?`BL: ${fmt(s.blProjectFinish)}. Current: ${fmt(s.projFinish)}. Diff: ${ddays(s.blProjectFinish,s.projFinish)||0}d.`:''}
+  ];
+  const delayTypes=[
+    {cls:'dt-crit',title:T('critDelay'),body:projectDelayDays>0?`${projectDelayDays} working days of confirmed critical delay.`:'No critical delay to project completion confirmed at this time.'},
+    {cls:'dt-exc',title:T('excDelay'),body:causeCode==='constraint'?`Owner-imposed constraints may qualify as excusable. TIA required.`:'No clearly excusable events identified from schedule data.'},
+    {cls:'dt-comp',title:T('compDelay'),body:causeCode==='constraint'?`If owner-imposed constraints are proven, contractor may be entitled to time extension and cost. Formal delay claim analysis recommended.`:'Compensability cannot be determined from schedule data alone.'},
+    {cls:'dt-conc',title:T('concDelay'),body:delayedActs.length>0&&missed.length>0&&hcActs.length>0?`Multiple concurrent delay events detected. Concurrent delay assessment required.`:'No concurrent delay pattern identified.'}
+  ];
+  const recs=[];
+  if(projectDelayDays>0){
+    recs.push(`Fast-track: Overlap critical path activities. Target recovery of ${Math.ceil(projectDelayDays*0.4)} days through SS/FF relationships.`);
+    recs.push(`Crash: Add resources to the ${Math.min(5,dcma.critActs.length)} longest critical activities. Estimated recovery: ${Math.ceil(projectDelayDays*0.35)} days at ~15–25% cost premium.`);
+    recs.push(`Submit formal recovery programme within 14 days showing how the ${projectDelayDays}-day delay will be recovered.`);
+  }
+  if(missed.length>0) recs.push(`Mobilise immediately: Issue written instruction to start all ${missed.length} overdue activities. Request weekly updates.`);
+  if(hcActs.length>0) recs.push(`Remove constraints: Review all ${hcActs.length} hard constraints. Removing non-contractual constraints may immediately recover float at no cost.`);
+  if(!hasBaseline) recs.push(`Upload approved baseline: Without a baseline, delay analysis is indicative only. Upload the approved baseline (Rev A) for definitive assessment.`);
+  if(SC&&SC.missing.length>0) recs.push(`Address scope gaps: ${SC.missing.length} scope items have no corresponding schedule activity. Add missing activities to the schedule.`);
+  recs.push(`Issue a formal Time Impact Analysis (TIA) documenting all delay events, quantifying critical impact, and establishing contractual entitlement.`);
+  const allDelayed=[...new Set([...delayedActs,...nfActs,...missed])].sort((a,b)=>(b.finishDelay||0)-(a.finishDelay||0)).slice(0,150);
+  return{wh,delayTypes,recs,projectDelayDays,rootCause,responsible,impacted:allDelayed,firstDelay,lastDelay,hasBaseline,delayedActs,advancedActs,maxFinishDelay,critPathDelay};
+}
+</script>
+<script>
+// ══════════════════════════════════════════
+// RENDER FUNCTIONS
+// ══════════════════════════════════════════
+function renderAll(sched,dcma,delay){
+  S=sched;D=dcma;DA=delay;allActs=[...sched.activities];
+  const acts=sched.activities;
+  document.getElementById('pname').textContent=sched.projectName;
+  const td=ddays(sched.projStart,sched.projFinish);
+  document.getElementById('pmeta').innerHTML=
+    `${T('step1').replace('Step 1 — Upload current schedule','Format')}: <b>${sched._format||'XER'}</b> &nbsp;·&nbsp; Data date: <b>${fmt(sched.dataDate)}</b> &nbsp;·&nbsp; <b>${fmt(sched.projStart)}</b> → <b>${fmt(sched.projFinish)}</b>`+
+    (td?` (${td}d)`:'')+` &nbsp;·&nbsp; ${T('activities')}: <b>${acts.length}</b> &nbsp;·&nbsp; ${T('relationships')}: <b>${sched.relationships.length}</b>`+
+    (sched.hasBaseline?` &nbsp;·&nbsp; <span style="color:var(--success)">✓ ${T('blLoaded')} ${sched.blProjectName}</span>`:'')+
+    (SC?` &nbsp;·&nbsp; <span style="color:var(--purple)">🔭 ${SC.items.length} scope items</span>`:'');
+  const arc=document.getElementById('sarc');
+  arc.style.strokeDashoffset=314-(dcma.score/100)*314;
+  arc.style.stroke=dcma.score>=75?'#15803d':dcma.score>=50?'#b45309':'#b91c1c';
+  document.getElementById('snum').textContent=dcma.score;
+  const v=document.getElementById('sverd');
+  if(dcma.score>=75){v.textContent=T('good');v.className='verd vg';}
+  else if(dcma.score>=50){v.textContent=T('acceptable');v.className='verd vw';}
+  else{v.textContent=T('needsImprovement');v.className='verd vb';}
+  const crit=acts.filter(a=>a.isCritical),comp=acts.filter(a=>a.status==='Completed');
+  const inprog=acts.filter(a=>a.status==='In progress'),nf=acts.filter(a=>a.totalFloat!==null&&a.totalFloat<0);
+  document.getElementById('kgrid').innerHTML=[
+    {v:acts.length,l:T('activities'),s:`${acts.filter(a=>a.type==='Milestone').length} milestones`},
+    {v:sched.relationships.length,l:T('relationships'),s:''},
+    {v:crit.length,l:T('critical'),s:`${((crit.length/Math.max(acts.length,1))*100).toFixed(0)}%`,c:crit.length?'var(--danger)':''},
+    {v:comp.length,l:T('completed'),s:`${((comp.length/Math.max(acts.length,1))*100).toFixed(0)}%`,c:'var(--success)'},
+    {v:inprog.length,l:T('inProgress'),s:''},
+    {v:nf.length,l:T('negFloat'),s:'',c:nf.length?'var(--danger)':''},
+    {v:delay.projectDelayDays>0?delay.projectDelayDays+'d':T('noDelay'),l:T('projDelay'),s:delay.hasBaseline?T('vsBaseline'):T('floatBased'),c:delay.projectDelayDays>0?'var(--danger)':'var(--success)'},
+    {v:dcma.passed+'/14',l:T('dcmaChecks'),s:`${dcma.score}%`},
+    {v:SC?SC.missing.length:T('notApplicable'),l:T('scopeGaps'),s:SC?SC.sourceFile.substring(0,12)+'…':T('noScopeLoaded'),c:SC&&SC.missing.length?'var(--danger)':SC?'var(--success)':'var(--text3)'}
+  ].map(k=>`<div class="kpi"><div class="kv" style="${k.c?'color:'+k.c:''}">${k.v}</div><div class="kl">${k.l}</div>${k.s?'<div class="ks">'+k.s+'</div>':''}</div>`).join('');
+  renderDCMA(dcma.checks);
+  renderDelay(sched,dcma,delay);
+  renderBaseline(sched,delay);
+  renderScope();
+  renderActs(allActs);
+  renderCritical(sched,crit);
+  renderFindings(dcma.findings);
+  renderReport(sched,dcma,delay);
+  setTimeout(()=>renderCharts(sched),80);
+  const dashBl=document.getElementById('dashBlBtn');
+  if(dashBl) dashBl.style.display=sched.hasBaseline?'inline-flex':'none';
+}
+
+function renderDCMA(checks){
+  document.getElementById('dcmaGrid').innerHTML=checks.map(c=>`
+    <div class="di">
+      <div class="dn">${c.n}</div>
+      <div><div class="dname">${c.name}</div><div class="ddet">${c.detail} · Threshold: ${c.thresh}</div></div>
+      <div class="dmet" style="color:${c.pass?'var(--success)':'var(--danger)'}">${c.metric}</div>
+      <span class="badge ${c.pass?'bp2':'bf'}">${c.pass?'PASS':'FAIL'}</span>
+    </div>`).join('');
+}
+
+function renderDelay(sched,dcma,delay){
+  document.getElementById('delayBanner').innerHTML=delay.projectDelayDays>0
+    ?`<div class="bb-no">⚠ <b>${delay.projectDelayDays} ${T('delayBannerWarn')} ${delay.hasBaseline?T('vsBaseline'):T('floatBased')}.</b> ${delay.rootCause}</div>`
+    :delay.impacted.length>0?`<div class="bb-no">⚠ <b>${delay.impacted.length} activities have slipped vs baseline</b> but project finish not yet impacted.</div>`
+    :`<div class="bb-yes">✓ ${T('delayBannerNone')} ${delay.hasBaseline?'All activities on track vs baseline.':'Upload baseline for definitive assessment.'}</div>`;
+  document.getElementById('dkrow').innerHTML=[
+    {v:delay.projectDelayDays>0?delay.projectDelayDays+'d':T('noDelay'),l:T('projDelay'),c:delay.projectDelayDays>0?'var(--danger)':'var(--success)'},
+    {v:fmt(delay.firstDelay),l:'First delay date'},
+    {v:fmt(delay.lastDelay),l:'Impact end'},
+    {v:delay.delayedActs.length,l:'Activities vs BL',c:delay.delayedActs.length?'var(--warning)':''},
+    {v:delay.hasBaseline?'✓ Loaded':'✗ None',l:T('blLoaded').replace(':',''),c:delay.hasBaseline?'var(--success)':'var(--warning)'},
+    {v:delay.responsible,l:T('whoResp')}
+  ].map(k=>`<div class="dkpi"><div class="dkv" style="${k.c?'color:'+k.c:''}">${k.v}</div><div class="dkl">${k.l}</div></div>`).join('');
+  document.getElementById('whgrid').innerHTML=delay.wh.map(w=>`
+    <div class="whcard">
+      <div class="whlbl"><div class="whico" style="background:${w.bg};color:${w.color}">${w.icon}</div>${w.q}</div>
+      <div class="whbody">${w.answer}</div>
+      ${w.detail?'<div class="whdet">'+w.detail+'</div>':''}
+    </div>`).join('');
+  document.getElementById('dtgrid').innerHTML=delay.delayTypes.map(t=>`
+    <div class="dtcard ${t.cls}"><div class="dtt">${t.title}</div><div class="dtb">${t.body}</div></div>`).join('');
+  document.getElementById('delayTable').innerHTML=delay.impacted.length
+    ?delay.impacted.map(a=>{
+        const fc=a.finishDelay>0?'color:var(--danger);font-weight:700':a.finishDelay<0?'color:var(--success)':'';
+        const sc=a.startDelay>0?'color:var(--warning);font-weight:600':'';
+        const imp=a.finishDelay>0?a.finishDelay+'d late':a.totalFloat!==null&&a.totalFloat<0?Math.abs(a.totalFloat)+'d neg':'Overdue';
+        const bimpc=a.finishDelay>5?'bf':a.finishDelay>0?'bw':'bna';
+        const rec=a.finishDelay>5?'Immediate recovery':a.finishDelay>0?'Accelerate':a.totalFloat!==null&&a.totalFloat<0?'Recovery plan':'Mobilise';
+        return`<tr>
+          <td style="font-family:monospace;font-size:11px">${a.actId}</td>
+          <td>${a.name.substring(0,45)}</td>
+          <td>${fmt(a.blStart)}</td><td>${fmt(a.blFinish)}</td>
+          <td>${fmt(a.earlyStart)}</td><td>${fmt(a.earlyFinish)}</td>
+          <td style="${sc}">${a.startDelay!==undefined&&a.startDelay!==0?(a.startDelay>0?'+':'')+a.startDelay+'d':'—'}</td>
+          <td style="${fc}">${a.finishDelay!==undefined&&a.finishDelay!==0?(a.finishDelay>0?'+':'')+a.finishDelay+'d':'—'}</td>
+          <td style="text-align:right;${a.totalFloat!==null&&a.totalFloat<0?'color:var(--danger);font-weight:700':''}">${a.totalFloat!==null?a.totalFloat+'d':'—'}</td>
+          <td><span class="badge ${bimpc}">${imp}</span></td>
+          <td style="font-size:11px;color:var(--accent)">${rec}</td>
+        </tr>`;
+      }).join('')
+    :'<tr><td colspan="11" class="empty">No delay-impacted activities found</td></tr>';
+  document.getElementById('recbox').innerHTML=`<div class="rboxt">${T('recoveryRecs')}</div>`+
+    delay.recs.map((r,i)=>`<div class="ritem"><b>Option ${i+1}:</b> ${r}</div>`).join('');
+}
+
+function renderBaseline(sched,delay){
+  if(!delay.hasBaseline){
+    document.getElementById('blBanner').innerHTML=`<div class="bb-no">⚠ <b>${T('blNotLoaded')}</b> Upload an approved baseline XER, XML, or XLSX file (Step 2 on the upload screen) for definitive delay analysis.</div>`;
+    document.getElementById('blContent').innerHTML=`<div class="empty">Load an approved baseline to see activity-by-activity comparison here.</div>`;
+    return;
+  }
+  document.getElementById('blBanner').innerHTML=`<div class="bb-yes">✓ <b>${T('blLoaded')} ${sched.blProjectName}</b> · ${T('blStart')}: ${fmt(sched.blProjectStart)} · ${T('blFinish')}: ${fmt(sched.blProjectFinish)} · ${delay.delayedActs.length} activities slipped · ${delay.advancedActs.length} ahead</div>`;
+  const delayed=delay.delayedActs.length,advanced=delay.advancedActs.length;
+  const acts=sched.activities.filter(a=>a.blFinish&&a.earlyFinish);
+  const onTime=acts.length-delayed-advanced;
+  document.getElementById('blContent').innerHTML=`
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.65rem;margin-bottom:1rem">
+      ${[{v:acts.length,l:'Compared'},{v:delayed,l:'Delayed vs BL',c:delayed?'var(--danger)':''},{v:advanced,l:'Ahead of BL',c:advanced?'var(--success)':''},{v:onTime,l:'On track',c:'var(--success)'},{v:fmt(sched.blProjectStart),l:T('blStart')},{v:fmt(sched.blProjectFinish),l:T('blFinish')}].map(k=>`<div class="dkpi"><div class="dkv" style="${k.c?'color:'+k.c:''}">${k.v}</div><div class="dkl">${k.l}</div></div>`).join('')}
+    </div>
+    <div class="stitle">Activity-by-activity baseline comparison</div>
+    <div class="tw"><table><thead><tr>
+      <th>${T('activities2')}</th><th>${T('actName')}</th><th>${T('blStart')}</th><th>${T('blFinish')}</th>
+      <th>${T('curStart')}</th><th>${T('curFinish')}</th><th>${T('startVar')}</th><th>${T('finishVar')}</th><th>Critical</th><th>${T('statusCol')}</th>
+    </tr></thead><tbody>
+      ${sched.activities.filter(a=>a.blStart||a.blFinish).slice(0,400).map(a=>{
+        const sd=a.startDelay||0,fd=a.finishDelay||0;
+        const fc=fd>0?'color:var(--danger);font-weight:700':fd<0?'color:var(--success)':'';
+        const sc2=sd>0?'color:var(--warning);font-weight:600':'';
+        return`<tr>
+          <td style="font-family:monospace;font-size:11px">${a.actId}</td>
+          <td>${a.name.substring(0,45)}</td>
+          <td>${fmt(a.blStart)}</td><td>${fmt(a.blFinish)}</td>
+          <td>${fmt(a.earlyStart)}</td><td>${fmt(a.earlyFinish)}</td>
+          <td style="${sc2}">${sd!==0?(sd>0?'+':'')+sd+'d':'—'}</td>
+          <td style="${fc}">${fd!==0?(fd>0?'+':'')+fd+'d':'—'}</td>
+          <td>${a.isCritical?'<span class="dc"></span>Yes':'No'}</td>
+          <td><span class="badge ${a.status==='Completed'?'bp2':a.status==='In progress'?'bw':'bna'}">${a.status}</span></td>
+        </tr>`;
+      }).join('')}
+    </tbody></table></div>`;
+}
+
+function renderScope(){
+  const el=document.getElementById('scopeContent');
+  if(!SC){
+    el.innerHTML=`
+      <div class="bb-scope">🔭 <b>${T('scopeNoDoc')}</b> Upload a scope document (Step 3) to run gap analysis between your scope and schedule.</div>
+      <div style="background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:1.25rem;box-shadow:var(--sh)">
+        <div class="stitle">${T('scopeHowTitle')}</div>
+        <ol style="margin:0;padding-inline-start:1.3rem;font-size:13px;color:var(--text2);line-height:2">
+          ${T('scopeHowSteps').map(s=>`<li>${s}</li>`).join('')}
+        </ol>
+        <div style="margin-top:1rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.65rem">
+          ${[['📄','PDF','Scope of Work, ITT docs'],['📊','Excel','WPR, Deliverable lists'],['📝','Word/DOCX','Scope documents, specs'],['📋','CSV / TXT','Simple deliverable lists']].map(([ico,t,d])=>`<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:.75rem;text-align:center"><div style="font-size:22px">${ico}</div><div style="font-size:12px;font-weight:700;color:var(--purple);margin:.25rem 0">${t}</div><div style="font-size:11px;color:var(--text3)">${d}</div></div>`).join('')}
+        </div>
+      </div>`;
+    return;
+  }
+  const covPct=SC.items.length?Math.round((SC.matched.length/SC.items.length)*100):0;
+  el.innerHTML=`
+    ${SC.missing.length>0
+      ?`<div class="bb-no">❌ <b>${SC.missing.length} ${T('scopeMissingN')}</b> — these may represent missing schedule activities.</div>`
+      :`<div class="bb-yes">✓ All ${SC.matched.length} scope items matched to schedule activities.</div>`}
+    <div class="scope-stats">
+      ${[{v:SC.items.length,l:T('scopeItems')},{v:SC.matched.length,l:T('scopeMatchedN'),c:'var(--success)'},{v:SC.missing.length,l:T('scopeMissingN'),c:SC.missing.length?'var(--danger)':''},{v:SC.orphans.length,l:T('scopeUncovN'),c:SC.orphans.length?'var(--warning)':''},{v:covPct+'%',l:T('scopeCovRate'),c:covPct>=80?'var(--success)':covPct>=50?'var(--warning)':'var(--danger)'},{v:SC.sourceFile,l:T('scopeSource')}].map(k=>`<div class="sstat"><div class="sstat-v" style="${k.c?'color:'+k.c:''}">${k.v}</div><div class="sstat-l">${k.l}</div></div>`).join('')}
+    </div>
+    ${SC.missing.length?`
+    <div class="stitle" style="color:var(--danger)">❌ ${T('scopeMissing')} (${SC.missing.length})</div>
+    <div class="tw" style="margin-bottom:1rem"><table><thead><tr><th>#</th><th>${T('scopeItemCol')}</th><th>${T('confidence')}</th></tr></thead><tbody>
+    ${SC.missing.slice(0,150).map((m,i)=>`<tr><td>${i+1}</td><td>${m.text.substring(0,80)}</td><td style="color:var(--danger);font-weight:700">${m.conf}% (below 15% threshold)</td></tr>`).join('')}
+    </tbody></table></div>`:''}
+    ${SC.orphans.length?`
+    <div class="stitle" style="color:var(--warning)">⚠ ${T('scopeOrphans')} (${SC.orphans.length})</div>
+    <div class="tw" style="margin-bottom:1rem"><table><thead><tr><th>${T('activities2')}</th><th>${T('actName')}</th><th>${T('wbsCol')}</th><th>${T('statusCol')}</th><th>${T('floatCol')}</th></tr></thead><tbody>
+    ${SC.orphans.slice(0,150).map(a=>`<tr><td style="font-family:monospace;font-size:11px">${a.actId}</td><td>${a.name.substring(0,55)}</td><td style="font-size:11px;color:var(--text3)">${a.wbs.substring(0,25)}</td><td><span class="badge bna">${a.status}</span></td><td>${a.totalFloat!=null?a.totalFloat+'d':'—'}</td></tr>`).join('')}
+    </tbody></table></div>`:''}
+    <div class="stitle">✓ ${T('scopeMatched')} (${SC.matched.length})</div>
+    <div class="tw"><table><thead><tr><th>#</th><th>${T('scopeItemCol')}</th><th>${T('activities2')}</th><th>${T('matchedActCol')}</th><th>${T('confidence')}</th></tr></thead><tbody>
+    ${SC.matched.slice(0,200).map((m,i)=>{
+      const cc=m.conf>=70?'var(--success)':m.conf>=40?'var(--warning)':'var(--danger)';
+      return`<tr><td>${i+1}</td><td>${m.scopeText.substring(0,55)}</td><td style="font-family:monospace;font-size:11px">${m.actId}</td><td>${m.actName.substring(0,42)}</td><td style="color:${cc};font-weight:700">${m.conf}%</td></tr>`;
+    }).join('')}
+    </tbody></table></div>`;
+}
+
+function renderActs(acts){
+  document.getElementById('acnt').textContent=`${acts.length} ${T('activities').toLowerCase()}`;
+  document.getElementById('actTable').innerHTML=acts.slice(0,600).map(a=>{
+    const dot=a.isCritical?'<span class="dc"></span>':a.totalFloat!==null&&a.totalFloat<=5&&a.totalFloat>=0?'<span class="dw"></span>':'';
+    const fc=a.totalFloat!==null&&a.totalFloat<0?'color:var(--danger);font-weight:700':a.totalFloat===0?'color:var(--warning);font-weight:600':'';
+    const sb=a.status==='Completed'?'bp2':a.status==='In progress'?'bw':'bna';
+    const fdColor=a.finishDelay>0?'color:var(--danger)':a.finishDelay<0?'color:var(--success)':'';
+    const scopeStyle=a._scopeTag==='✓'?'color:var(--success);font-weight:700':a._scopeTag==='⚠'?'color:var(--warning);font-weight:700':'color:var(--text3)';
+    return`<tr>
+      <td style="font-family:monospace;font-size:11px">${a.actId}</td>
+      <td>${dot}${a.name.substring(0,45)}</td>
+      <td><span class="badge ${a.type==='Milestone'?'bw':'bna'}">${a.type}</span></td>
+      <td style="font-size:11px;color:var(--text3)">${a.wbs.substring(0,22)}</td>
+      <td style="text-align:right">${a.duration>0?a.duration+'d':'—'}</td>
+      <td>${fmt(a.earlyStart)}</td><td>${fmt(a.earlyFinish)}</td>
+      <td style="${fdColor}">${a.blStart?fmt(a.blStart):'—'}</td>
+      <td style="${fdColor}">${a.blFinish?fmt(a.blFinish):'—'}</td>
+      <td style="text-align:right;${fc}">${a.totalFloat!==null?a.totalFloat+'d':'—'}</td>
+      <td style="text-align:right">${a.pct>0?a.pct+'%':'—'}</td>
+      <td><span class="badge ${sb}">${a.status}</span></td>
+      <td style="font-size:11px;color:var(--text3)">${a.predecessors.slice(0,3).join(', ')}</td>
+      <td style="font-size:11px;${scopeStyle}">${a._scopeTag||'—'}</td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="14" class="empty">No activities</td></tr>';
+}
+
+function filterActs(){
+  const s=document.getElementById('asrch').value.toLowerCase();
+  const st=document.getElementById('astat').value;
+  const ft=document.getElementById('afilt').value;
+  const f=allActs.filter(a=>{
+    if(s&&!a.name.toLowerCase().includes(s)&&!a.actId.toLowerCase().includes(s)) return false;
+    if(st&&a.status!==st) return false;
+    if(ft==='critical'&&!a.isCritical) return false;
+    if(ft==='near'&&(a.totalFloat===null||a.totalFloat>5||a.totalFloat<0)) return false;
+    if(ft==='neg'&&(a.totalFloat===null||a.totalFloat>=0)) return false;
+    if(ft==='milestone'&&a.type!=='Milestone') return false;
+    if(ft==='delay'&&!a.isDelayedVsBL) return false;
+    if(ft==='scope-miss'&&a._scopeTag!=='⚠') return false;
+    return true;
+  });
+  renderActs(f);
+}
+
+function renderCritical(sched,crit){
+  const acts=sched.activities;
+  const avg=acts.filter(a=>a.totalFloat!==null).reduce((s,a)=>s+a.totalFloat,0)/Math.max(acts.filter(a=>a.totalFloat!==null).length,1);
+  document.getElementById('cpsumm').innerHTML=[
+    ['Critical activities',crit.length],
+    ['Near-critical (1–5d float)',acts.filter(a=>a.totalFloat!==null&&a.totalFloat>0&&a.totalFloat<=5).length],
+    ['Negative float',acts.filter(a=>a.totalFloat!==null&&a.totalFloat<0).length],
+    ['Average total float',avg.toFixed(1)+'d'],
+    ['Project start',fmt(sched.projStart)],['Project finish',fmt(sched.projFinish)],
+    ['BL finish',DA.hasBaseline?fmt(sched.blProjectFinish):T('noBaseline')]
+  ].map(([l,v])=>`<div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding:.28rem 0"><span style="color:var(--text3)">${l}</span><strong>${v}</strong></div>`).join('');
+  document.getElementById('critTable').innerHTML=crit.slice(0,200).map(a=>
+    `<tr>
+      <td style="font-family:monospace;font-size:11px"><span class="dc"></span>${a.actId}</td>
+      <td>${a.name.substring(0,55)}</td>
+      <td style="text-align:right">${a.duration}d</td>
+      <td>${fmt(a.earlyStart)}</td><td>${fmt(a.earlyFinish)}</td>
+      <td style="text-align:right;color:${a.totalFloat<0?'var(--danger)':'var(--warning)'};font-weight:700">${a.totalFloat!==null?a.totalFloat+'d':'—'}</td>
+      <td style="font-size:11px;color:var(--text3)">${a.predecessors.slice(0,3).join(', ')}</td>
+    </tr>`
+  ).join('')||'<tr><td colspan="7" class="empty">No critical activities — check schedule logic</td></tr>';
+}
+
+function renderFindings(findings){
+  if(!findings.length){
+    document.getElementById('findList').innerHTML=`<div class="fc fl"><div class="ft">✓ No significant issues found</div><div class="fb">All DCMA checks passed.</div></div>`;
+    return;
+  }
+  const ord={high:0,medium:1,low:2};
+  document.getElementById('findList').innerHTML=[...findings].sort((a,b)=>ord[a.sev]-ord[b.sev]).map((f,i)=>`
+    <div class="fc ${f.sev==='high'?'fh':f.sev==='medium'?'fm':'fl'}">
+      <div style="display:flex;gap:.45rem;align-items:center">
+        <span class="badge ${f.sev==='high'?'bf':f.sev==='medium'?'bw':'bp2'}">${f.sev.toUpperCase()}</span>
+        <span style="font-size:11px;color:var(--text3)">Finding ${i+1}</span>
+      </div>
+      <div class="ft">${f.title}</div>
+      <div class="fb">${f.body}</div>
+      ${f.rec?'<div class="frec">💡 <b>Recommendation:</b> '+f.rec+'</div>':''}
+    </div>`).join('');
+}
+
+function renderCharts(sched){
+  Object.values(charts).forEach(c=>{try{c.destroy();}catch(e){}});charts={};
+  const acts=sched.activities;
+  const wbsC={};acts.forEach(a=>{const w=a.wbs||'Unassigned';wbsC[w]=(wbsC[w]||0)+1;});
+  const wbsT=Object.entries(wbsC).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  charts.wbs=new Chart(document.getElementById('wbsChart'),{type:'bar',data:{labels:wbsT.map(e=>e[0].length>18?e[0].substring(0,18)+'…':e[0]),datasets:[{label:T('activities'),data:wbsT.map(e=>e[1]),backgroundColor:'#1d6feb',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,grid:{color:'#e8edf2'}},x:{grid:{display:false},ticks:{font:{size:10}}}}}});
+  const sc={'Not started':0,'In progress':0,'Completed':0};acts.forEach(a=>{sc[a.status]=(sc[a.status]||0)+1;});
+  charts.stat=new Chart(document.getElementById('statChart'),{type:'doughnut',data:{labels:Object.keys(sc),datasets:[{data:Object.values(sc),backgroundColor:['#94a3b8','#f59e0b','#22c55e'],borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:11},boxWidth:12}}}}});
+  const db={'0d':0,'1–5d':0,'6–14d':0,'15–30d':0,'31–44d':0,'>44d':0};
+  acts.forEach(a=>{if(a.duration===0)db['0d']++;else if(a.duration<=5)db['1–5d']++;else if(a.duration<=14)db['6–14d']++;else if(a.duration<=30)db['15–30d']++;else if(a.duration<=44)db['31–44d']++;else db['>44d']++;});
+  charts.dur=new Chart(document.getElementById('durChart'),{type:'bar',data:{labels:Object.keys(db),datasets:[{label:T('activities'),data:Object.values(db),backgroundColor:'#1baf7a',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,grid:{color:'#e8edf2'}},x:{grid:{display:false},ticks:{font:{size:10}}}}}});
+  const rb={FS:0,SS:0,FF:0,SF:0};sched.relationships.forEach(r=>{const t=r.type.replace('PR_','');if(rb[t]!==undefined)rb[t]++;});
+  charts.rel=new Chart(document.getElementById('relChart'),{type:'doughnut',data:{labels:Object.keys(rb),datasets:[{data:Object.values(rb),backgroundColor:['#1d6feb','#1baf7a','#eda100','#e34948'],borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:11},boxWidth:12}}}}});
+  const fb={'<0d':0,'0d':0,'1–5d':0,'6–14d':0,'15–30d':0,'>30d':0};
+  sched.activities.forEach(a=>{if(a.totalFloat===null)return;if(a.totalFloat<0)fb['<0d']++;else if(a.totalFloat===0)fb['0d']++;else if(a.totalFloat<=5)fb['1–5d']++;else if(a.totalFloat<=14)fb['6–14d']++;else if(a.totalFloat<=30)fb['15–30d']++;else fb['>30d']++;});
+  charts.float=new Chart(document.getElementById('floatChart'),{type:'bar',data:{labels:Object.keys(fb),datasets:[{label:T('activities'),data:Object.values(fb),backgroundColor:['#ef4444','#f97316','#f59e0b','#3b82f6','#6366f1','#94a3b8'],borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,grid:{color:'#e8edf2'}},x:{grid:{display:false},ticks:{font:{size:10}}}}}});
+}
+
+function renderReport(sched,dcma,delay){
+  const now=new Date(),acts=sched.activities,crit=acts.filter(a=>a.isCritical),hi=dcma.findings.filter(f=>f.sev==='high');
+  document.getElementById('repContent').innerHTML=`
+    <div class="rcov">
+      <div class="rlogbar"><div class="rlogbox">Sarwar SchedulePro AI</div><span style="font-size:12px;color:var(--text3)">Planning &amp; Project Controls — Developed by Sarwar</span></div>
+      <div class="rtitle">${T('pdfTitle')}</div>
+      <div class="rsub">DCMA 14-Point · Baseline · EVM · Risk · ${T('tabScope')} · ${fmt(now)}</div>
+      <div class="rmeta">
+        <div class="rrow"><span class="rl">Project:</span><span class="rv">${sched.projectName}</span></div>
+        <div class="rrow"><span class="rl">Format:</span><span class="rv">${sched._format||'XER'}</span></div>
+        <div class="rrow"><span class="rl">Data date:</span><span class="rv">${fmt(sched.dataDate)}</span></div>
+        <div class="rrow"><span class="rl">Report date:</span><span class="rv">${fmt(now)}</span></div>
+        <div class="rrow"><span class="rl">Plan start:</span><span class="rv">${fmt(sched.projStart)}</span></div>
+        <div class="rrow"><span class="rl">Plan finish:</span><span class="rv">${fmt(sched.projFinish)}</span></div>
+        <div class="rrow"><span class="rl">${T('blLoaded').replace(':','')}:</span><span class="rv" style="color:${delay.hasBaseline?'var(--success)':'var(--warning)'}">${delay.hasBaseline?sched.blProjectName+' ✓':T('noBaseline')}</span></div>
+        <div class="rrow"><span class="rl">BL finish:</span><span class="rv">${delay.hasBaseline?fmt(sched.blProjectFinish):'—'}</span></div>
+        <div class="rrow"><span class="rl">${T('activities')}:</span><span class="rv">${acts.length}</span></div>
+        <div class="rrow"><span class="rl">${T('relationships')}:</span><span class="rv">${sched.relationships.length}</span></div>
+        <div class="rrow"><span class="rl">DCMA score:</span><span class="rv" style="color:${dcma.score>=75?'var(--success)':dcma.score>=50?'var(--warning)':'var(--danger)'}">${dcma.score}/100</span></div>
+        <div class="rrow"><span class="rl">${T('projDelay')}:</span><span class="rv" style="color:${delay.projectDelayDays>0?'var(--danger)':'var(--success)'}">${delay.projectDelayDays>0?delay.projectDelayDays+' d':T('noDelay')}</span></div>
+        <div class="rrow"><span class="rl">Scope:</span><span class="rv">${SC?SC.items.length+' items, '+SC.missing.length+' missing':T('noScopeLoaded')}</span></div>
+        <div class="rrow"><span class="rl">Prepared by:</span><span class="rv">Sarwar SchedulePro AI</span></div>
+        <div class="rrow"><span class="rl">Revision:</span><span class="rv">Rev 0 — For Review</span></div>
+      </div>
+    </div>
+    <div class="rsec"><div class="rst">1. Executive Summary</div><div class="rb">
+      Schedule analysis for <b>${sched.projectName}</b> (data date: <b>${fmt(sched.dataDate)}</b>).
+      <b>${acts.length} activities</b>, <b>${sched.relationships.length} relationships</b>, planned ${fmt(sched.projStart)} → <b>${fmt(sched.projFinish)}</b>.
+      DCMA health score: <b>${dcma.score}/100</b> (${dcma.passed}/14 checks).
+      ${delay.hasBaseline?`Baseline comparison against <b>${sched.blProjectName}</b> (BL finish: ${fmt(sched.blProjectFinish)}).`:' No baseline loaded.'}
+      ${delay.projectDelayDays>0?`<b style="color:var(--danger)"> Project is ${delay.projectDelayDays} working days behind ${delay.hasBaseline?'the approved baseline.':'the planned date.'}</b>`:'<b style="color:var(--success)"> No confirmed delay to project completion.</b>'}
+      ${hi.length>0?`<b style="color:var(--danger)"> ${hi.length} high-priority findings require immediate action.</b>`:''}
+      ${SC?` Scope gap: <b>${SC.matched.length}/${SC.items.length}</b> items matched. <b style="color:${SC.missing.length?'var(--danger)':'var(--success)'}">${SC.missing.length} missing from schedule.</b>`:''}
+    </div></div>
+    <div class="rsec"><div class="rst">2. DCMA 14-Point Assessment</div>
+      <div style="display:grid;gap:.4rem">${dcma.checks.map(c=>`
+        <div style="display:flex;align-items:center;gap:.8rem;padding:.45rem .7rem;background:${c.pass?'#f0fdf4':'#fef2f2'};border-radius:5px;font-size:12px">
+          <span style="width:22px;height:22px;border-radius:50%;background:${c.pass?'var(--success)':'var(--danger)'};color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">${c.n}</span>
+          <span style="flex:1;font-weight:600">${c.name}</span>
+          <span style="color:var(--text3);font-size:11px">${c.detail}</span>
+          <span style="font-weight:700;min-width:48px;text-align:right;color:${c.pass?'var(--success)':'var(--danger)'}">${c.metric}</span>
+          <span class="badge ${c.pass?'bp2':'bf'}">${c.pass?'PASS':'FAIL'}</span>
+        </div>`).join('')}
+      </div>
+    </div>
+    <div class="rsec"><div class="rst">3. Delay Root Cause — WH Analysis</div>
+      <div style="display:grid;gap:.65rem">${delay.wh.map(w=>`
+        <div style="padding:.8rem .95rem;background:${w.bg};border-radius:7px;border-left:4px solid ${w.color}">
+          <div style="font-size:10.5px;font-weight:700;color:${w.color};text-transform:uppercase;letter-spacing:.06em;margin-bottom:.25rem">${w.q}</div>
+          <div style="font-size:12.5px;color:var(--text);font-weight:500">${w.answer}</div>
+          ${w.detail?'<div style="font-size:12px;color:var(--text2);margin-top:.25rem;line-height:1.55">'+w.detail+'</div>':''}
+        </div>`).join('')}
+      </div>
+    </div>
+    ${SC?`<div class="rsec"><div class="rst">4. Scope Gap Analysis</div><div class="rb">
+      Source: <b>${SC.sourceFile}</b> — ${SC.items.length} scope items. ${SC.matched.length} matched (${Math.round(SC.matched.length/Math.max(SC.items.length,1)*100)}% coverage).
+      ${SC.missing.length>0?`<b style="color:var(--danger)"> ${SC.missing.length} scope items have no corresponding schedule activity.</b> These represent potential missing work.`:' All scope items covered.'}
+      ${SC.orphans.length>0?` ${SC.orphans.length} schedule activities not covered by scope (potential scope creep/growth).`:''}
+    </div></div>`:''}
+    <div class="rsec"><div class="rst">${SC?'5':'4'}. Findings &amp; Recommendations</div>
+      <div style="display:grid;gap:.55rem">${dcma.findings.length===0?'<div class="rb">No significant findings.</div>'
+        :dcma.findings.map((f,i)=>`
+        <div style="padding:.75rem .9rem;border-left:4px solid ${f.sev==='high'?'var(--danger)':f.sev==='medium'?'var(--warning)':'var(--success)'};background:${f.sev==='high'?'#fef2f2':f.sev==='medium'?'#fffbeb':'#f0fdf4'};border-radius:0 5px 5px 0">
+          <div style="font-size:10px;font-weight:700;color:${f.sev==='high'?'var(--danger)':f.sev==='medium'?'var(--warning)':'var(--success)'};">${f.sev.toUpperCase()} · Finding ${i+1}</div>
+          <div style="font-size:12.5px;font-weight:700;margin:.2rem 0">${f.title}</div>
+          <div style="font-size:12px;color:var(--text2);line-height:1.55">${f.body}</div>
+          ${f.rec?'<div style="font-size:11.5px;color:var(--navy);margin-top:.3rem;font-weight:500">💡 '+f.rec+'</div>':''}
+        </div>`).join('')}
+      </div>
+    </div>
+    <div class="rsec"><div class="rst">${SC?'6':'5'}. Recovery Options</div>
+      <div style="display:grid;gap:.45rem">${delay.recs.map((r,i)=>`
+        <div style="padding:.65rem .9rem;background:var(--surface);border-radius:5px;border:1px solid var(--border);font-size:12.5px;color:var(--text2)"><b style="color:var(--navy)">Option ${i+1}:</b> ${r}</div>`).join('')}
+      </div>
+    </div>
+    <div class="rsec"><div class="rst">${T('signOff')}</div>
+      <div class="sigbox">
+        <div class="sig"><div class="sign">${T('preparedBy')}</div><div style="height:44px"></div>Sarwar SchedulePro AI<br>Planning &amp; Project Controls</div>
+        <div class="sig"><div class="sign">${T('reviewedBy')}</div><div style="height:44px"></div>Name / Title<br>Date: ___________</div>
+        <div class="sig"><div class="sign">${T('approvedBy')}</div><div style="height:44px"></div>Name / Title<br>Date: ___________</div>
+      </div>
+    </div>`;
+}
+</script>
+<script>
+// ══════════════════════════════════════════
+// EXPORT — PDF
+// ══════════════════════════════════════════
+function exportPDF(opts){
+  const w=window.open('','_blank');const now=new Date();const isRTL=T('dir')==='rtl';
+  const ff=T('fontFamily');
+  const css=`body{font-family:${ff};max-width:960px;margin:2rem auto;padding:0 2rem;color:#0d1b2e;font-size:13px;line-height:1.6;direction:${T('dir')}}
+  .rlogbox{background:#0b1f3a;color:#fff;padding:.4rem .9rem;border-radius:5px;font-size:13px;font-weight:800;display:inline-block}
+  .rtitle{font-size:22px;font-weight:800;color:#0b1f3a;margin:.5rem 0 .2rem}.rsub{color:#60748a;font-size:13px}
+  .rmeta{display:grid;grid-template-columns:1fr 1fr;gap:.35rem .65rem;margin:1rem 0;padding:.8rem .95rem;background:#f4f6fa;border-radius:6px}
+  .rrow{display:flex;gap:.5rem;font-size:12.5px}.rl{color:#60748a;min-width:${isRTL?'110px':'105px'};flex-shrink:0}.rv{font-weight:600}
+  .rst{font-size:14px;font-weight:800;color:#0b1f3a;border-bottom:2px solid #dee2e8;padding-bottom:.35rem;margin:1.5rem 0 .75rem}
+  .rb{font-size:13px;color:#2d3f56;line-height:1.75}.sigbox{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.5rem;margin-top:1rem}
+  .sig{border-top:1px solid #dee2e8;padding-top:.5rem;text-align:center;font-size:12px;color:#60748a}.sign{font-size:13px;font-weight:700;color:#0d1b2e;margin-bottom:.2rem}
+  .badge{display:inline-flex;font-size:11px;font-weight:700;padding:.2rem .6rem;border-radius:20px}
+  .bp2{background:#dcfce7;color:#15803d}.bf{background:#fee2e2;color:#b91c1c}.bw{background:#fef9c3;color:#b45309}.bna{background:#f1f5f9;color:#64748b}
+  table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:.85rem}
+  th{background:#0b1f3a;color:#fff;padding:.45rem .75rem;text-align:${isRTL?'right':'left'};font-weight:600}
+  td{padding:.38rem .75rem;border-bottom:1px solid #dee2e8;color:#2d3f56}
+  tr:nth-child(even) td{background:#f8fafc}
+  .fh{border-left:4px solid #b91c1c;padding:.65rem .9rem;background:#fef2f2;margin:.4rem 0;border-radius:0 5px 5px 0}
+  .fm{border-left:4px solid #b45309;padding:.65rem .9rem;background:#fffbeb;margin:.4rem 0;border-radius:0 5px 5px 0}
+  .fl{border-left:4px solid #15803d;padding:.65rem .9rem;background:#f0fdf4;margin:.4rem 0;border-radius:0 5px 5px 0}
+  .scope-miss{color:#b91c1c;background:#fef2f2;border-radius:4px;padding:.3rem .6rem;margin:.25rem 0;font-size:12px;border-left:3px solid #b91c1c}
+  .scope-orp{color:#b45309;background:#fffbeb;border-radius:4px;padding:.3rem .6rem;margin:.25rem 0;font-size:12px;border-left:3px solid #b45309}
+  @media print{body{margin:0;padding:1rem}}`;
+  let body=`<div class="rlogbox">Sarwar SchedulePro AI</div> <span style="font-size:12px;color:#60748a">Planning & Project Controls</span>
+  <div class="rtitle">${T('pdfTitle')}</div>
+  <div class="rsub">DCMA 14-Point · Baseline · ${T('tabScope')} · ${fmt(now)}</div>
+  <div class="rmeta">
+    <div class="rrow"><span class="rl">Project:</span><span class="rv">${S.projectName}</span></div>
+    <div class="rrow"><span class="rl">Format:</span><span class="rv">${S._format||'XER'}</span></div>
+    <div class="rrow"><span class="rl">Data date:</span><span class="rv">${fmt(S.dataDate)}</span></div>
+    <div class="rrow"><span class="rl">Report date:</span><span class="rv">${fmt(now)}</span></div>
+    <div class="rrow"><span class="rl">Plan start:</span><span class="rv">${fmt(S.projStart)}</span></div>
+    <div class="rrow"><span class="rl">Plan finish:</span><span class="rv">${fmt(S.projFinish)}</span></div>
+    <div class="rrow"><span class="rl">Baseline:</span><span class="rv" style="color:${DA.hasBaseline?'#15803d':'#b45309'}">${DA.hasBaseline?S.blProjectName+' ✓':T('noBaseline')}</span></div>
+    <div class="rrow"><span class="rl">DCMA score:</span><span class="rv" style="color:${D.score>=75?'#15803d':D.score>=50?'#b45309':'#b91c1c'}">${D.score}/100 (${D.passed}/14)</span></div>
+    <div class="rrow"><span class="rl">${T('projDelay')}:</span><span class="rv" style="color:${DA.projectDelayDays>0?'#b91c1c':'#15803d'}">${DA.projectDelayDays>0?DA.projectDelayDays+' d':T('noDelay')}</span></div>
+    <div class="rrow"><span class="rl">Scope:</span><span class="rv">${SC?SC.items.length+' items, '+SC.missing.length+' missing':T('noScopeLoaded')}</span></div>
+    <div class="rrow"><span class="rl">Prepared by:</span><span class="rv">Sarwar SchedulePro AI</span></div>
+    <div class="rrow"><span class="rl">Revision:</span><span class="rv">Rev 0</span></div>
+  </div>`;
+  if(opts.summary) body+=`<div class="rst">1. Executive Summary</div><p style="font-size:13px;color:#2d3f56;line-height:1.75">${S.activities.length} activities, ${S.relationships.length} relationships. Plan: ${fmt(S.projStart)} → ${fmt(S.projFinish)}. DCMA: <b>${D.score}/100</b>. ${DA.projectDelayDays>0?'<b style="color:#b91c1c">'+DA.projectDelayDays+' working days delay.</b>':'<b style="color:#15803d">No confirmed delay.</b>'} ${SC?'Scope gap: '+SC.missing.length+' items missing.':''}</p>`;
+  if(opts.dcma){
+    body+=`<div class="rst">2. DCMA 14-Point</div><table><tr><th>#</th><th>Check</th><th>Detail</th><th>Metric</th><th>Result</th></tr>`;
+    D.checks.forEach(c=>body+=`<tr><td>${c.n}</td><td>${c.name}</td><td style="font-size:10px">${c.detail}</td><td style="color:${c.pass?'#15803d':'#b91c1c'};font-weight:700">${c.metric}</td><td><span class="badge ${c.pass?'bp2':'bf'}">${c.pass?'PASS':'FAIL'}</span></td></tr>`);
+    body+=`</table>`;
+  }
+  if(opts.delay){
+    body+=`<div class="rst">3. Delay Analysis — WH Root Cause</div><table><tr><th>Question</th><th>Answer</th></tr>`;
+    DA.wh.forEach(w=>body+=`<tr><td style="font-weight:700;width:28%">${w.q}</td><td>${w.answer.replace(/<[^>]+>/g,'')}</td></tr>`);
+    body+=`</table>`;
+  }
+  if(opts.critical){
+    const crit=S.activities.filter(a=>a.isCritical);
+    body+=`<div class="rst">4. Critical Path (${crit.length} activities)</div><table><tr><th>${T('activities2')}</th><th>${T('actName')}</th><th>Dur</th><th>Start</th><th>Finish</th><th>Float</th></tr>`;
+    crit.slice(0,80).forEach(a=>body+=`<tr><td style="font-family:monospace">${a.actId}</td><td>${a.name.substring(0,45)}</td><td>${a.duration}d</td><td>${fmt(a.earlyStart)}</td><td>${fmt(a.earlyFinish)}</td><td style="color:${a.totalFloat<0?'#b91c1c':'#b45309'};font-weight:700">${a.totalFloat!=null?a.totalFloat+'d':'—'}</td></tr>`);
+    body+=`</table>`;
+  }
+  if(opts.scope&&SC){
+    body+=`<div class="rst">5. Scope Gap Analysis</div>
+    <p style="font-size:13px;color:#2d3f56">Source: <b>${SC.sourceFile}</b> — ${SC.items.length} items. ${SC.matched.length} matched (${Math.round(SC.matched.length/Math.max(SC.items.length,1)*100)}% coverage). <b style="color:${SC.missing.length?'#b91c1c':'#15803d'}">${SC.missing.length} missing from schedule.</b> ${SC.orphans.length} activities uncovered.</p>`;
+    if(SC.missing.length){
+      body+=`<p><b>Missing from schedule:</b></p>`;
+      SC.missing.slice(0,80).forEach(m=>body+=`<div class="scope-miss">❌ ${m.text.substring(0,100)}</div>`);
+    }
+    if(SC.orphans.length){
+      body+=`<p><b>Activities not covered by scope:</b></p>`;
+      SC.orphans.slice(0,40).forEach(a=>body+=`<div class="scope-orp">⚠ ${a.actId} — ${a.name.substring(0,60)}</div>`);
+    }
+    if(SC.matched.length){
+      body+=`<p><b>Matched items (top 50):</b></p><table><tr><th>${T('scopeItemCol')}</th><th>${T('activities2')}</th><th>${T('matchedActCol')}</th><th>${T('confidence')}</th></tr>`;
+      SC.matched.slice(0,50).forEach(m=>body+=`<tr><td>${m.scopeText.substring(0,50)}</td><td style="font-family:monospace">${m.actId}</td><td>${m.actName.substring(0,40)}</td><td style="color:${m.conf>=70?'#15803d':m.conf>=40?'#b45309':'#b91c1c'};font-weight:700">${m.conf}%</td></tr>`);
+      body+=`</table>`;
+    }
+  }
+  if(opts.findings){
+    const ord={high:0,medium:1,low:2};
+    body+=`<div class="rst">6. Findings &amp; Recommendations</div>`;
+    [...D.findings].sort((a,b)=>ord[a.sev]-ord[b.sev]).forEach((f,i)=>body+=`<div class="${f.sev==='high'?'fh':f.sev==='medium'?'fm':'fl'}"><div style="font-size:10px;font-weight:700">${f.sev.toUpperCase()} — Finding ${i+1}</div><div style="font-weight:700">${f.title}</div><div>${f.body}</div>${f.rec?'<div style="font-size:11.5px;font-weight:500;margin-top:.3rem">💡 '+f.rec+'</div>':''}</div>`);
+    body+=`<p><b>Recovery options:</b></p>`;
+    DA.recs.forEach((r,i)=>body+=`<p><b>Option ${i+1}:</b> ${r}</p>`);
+  }
+  if(opts.activities){
+    body+=`<div class="rst">7. Activity List (first 200)</div><table><tr><th>${T('activities2')}</th><th>${T('actName')}</th><th>Dur</th><th>Start</th><th>Finish</th><th>Float</th><th>${T('statusCol')}</th><th>Scope</th></tr>`;
+    S.activities.slice(0,200).forEach(a=>body+=`<tr><td style="font-family:monospace;font-size:10px">${a.actId}</td><td>${a.name.substring(0,40)}</td><td>${a.duration>0?a.duration+'d':'—'}</td><td>${fmt(a.earlyStart)}</td><td>${fmt(a.earlyFinish)}</td><td style="color:${a.totalFloat!=null&&a.totalFloat<0?'#b91c1c':''}">${a.totalFloat!=null?a.totalFloat+'d':'—'}</td><td>${a.status}</td><td style="color:${a._scopeTag==='✓'?'#15803d':a._scopeTag==='⚠'?'#b45309':'#94a3b8'}">${a._scopeTag||'—'}</td></tr>`);
+    body+=`</table>`;
+  }
+  if(opts.baseline&&DA.hasBaseline){
+    body+=`<div class="rst">8. ${T('blLoaded').replace(':','')} Comparison</div><table><tr><th>${T('activities2')}</th><th>${T('actName')}</th><th>${T('blFinish')}</th><th>${T('curFinish')}</th><th>${T('finishVar')}</th></tr>`;
+    S.activities.filter(a=>a.blFinish&&a.earlyFinish).slice(0,150).forEach(a=>{const fd=a.finishDelay||0;body+=`<tr><td style="font-family:monospace">${a.actId}</td><td>${a.name.substring(0,40)}</td><td>${fmt(a.blFinish)}</td><td>${fmt(a.earlyFinish)}</td><td style="color:${fd>0?'#b91c1c':fd<0?'#15803d':''};font-weight:${fd!==0?'700':'400'}">${fd!==0?(fd>0?'+':'')+fd+'d':'—'}</td></tr>`;});
+    body+=`</table>`;
+  }
+  if(opts.sig) body+=`<div class="rst">${T('signOff')}</div><div class="sigbox"><div class="sig"><div class="sign">${T('preparedBy')}</div><br><br>Sarwar SchedulePro AI</div><div class="sig"><div class="sign">${T('reviewedBy')}</div><br><br>Name / Title<br>Date: ___</div><div class="sig"><div class="sign">${T('approvedBy')}</div><br><br>Name / Title<br>Date: ___</div></div>`;
+  body+=`<p style="font-size:11px;color:#60748a;margin-top:1.5rem;text-align:center"><i>Generated by Sarwar SchedulePro AI · ${fmt(now)} · Lang: ${LANG.toUpperCase()}</i></p>`;
+  w.document.write(`<!DOCTYPE html><html dir="${T('dir')}"><head><meta charset="UTF-8"><title>${T('pdfTitle')} — ${S.projectName}</title><style>${css}</style></head><body>${body}</body></html>`);
+  w.document.close();setTimeout(()=>w.print(),700);
+}
+
+// ══════════════════════════════════════════
+// EXPORT — EXCEL
+// ══════════════════════════════════════════
+function exportExcel(opts){
+  const wb=XLSX.utils.book_new();const now=new Date();
+  if(opts.summary){
+    const r=[['Sarwar SchedulePro AI — Schedule Report'],[''],['Project',S.projectName],['Format',S._format||'XER'],['Data date',fmt(S.dataDate)],['Report date',fmt(now)],['Plan start',fmt(S.projStart)],['Plan finish',fmt(S.projFinish)],['Baseline',DA.hasBaseline?S.blProjectName:T('noBaseline')],['BL finish',DA.hasBaseline?fmt(S.blProjectFinish):'—'],['Activities',S.activities.length],['Relationships',S.relationships.length],['DCMA score',D.score+'/100'],['Passed',D.passed+'/14'],['Project delay',DA.projectDelayDays>0?DA.projectDelayDays+'d':T('noDelay')],['Scope items',SC?SC.items.length:T('noScopeLoaded')],['Missing from schedule',SC?SC.missing.length:'N/A'],['Language',LANG.toUpperCase()],['Prepared by','Sarwar SchedulePro AI']];
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(r),'Summary');
+  }
+  if(opts.dcma){
+    const r=[['#','Check','Detail','Metric','Threshold','Result']];
+    D.checks.forEach(c=>r.push([c.n,c.name,c.detail,c.metric,c.thresh,c.pass?'PASS':'FAIL']));
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(r),'DCMA');
+  }
+  if(opts.delay){
+    const r=[['WH Question','Answer','Detail']];
+    DA.wh.forEach(w=>r.push([w.q,w.answer.replace(/<[^>]+>/g,''),w.detail]));
+    r.push(['','',''],['Recovery Options','','']);
+    DA.recs.forEach((rc,i)=>r.push(['Option '+(i+1),rc,'']));
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(r),'Delay Analysis');
+    const r2=[['ID','Name','BL Start','BL Finish','Current Start','Current Finish','Start Var(d)','Finish Var(d)','Float','Impact','Critical']];
+    DA.impacted.forEach(a=>r2.push([a.actId,a.name,fmt(a.blStart),fmt(a.blFinish),fmt(a.earlyStart),fmt(a.earlyFinish),a.startDelay||0,a.finishDelay||0,a.totalFloat!=null?a.totalFloat:'',a.finishDelay>0?a.finishDelay+'d late':a.totalFloat<0?Math.abs(a.totalFloat)+'d neg':'',a.isCritical?'Yes':'No']));
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(r2),'Delay Impact');
+  }
+  if(opts.activities){
+    const r=[['Activity ID','Name','Type','WBS','Duration(d)','Early Start','Early Finish','BL Start','BL Finish','Total Float(d)','% Complete','Status','Predecessors','Scope Tag']];
+    S.activities.forEach(a=>r.push([a.actId,a.name,a.type,a.wbs,a.duration,fmt(a.earlyStart),fmt(a.earlyFinish),fmt(a.blStart||null),fmt(a.blFinish||null),a.totalFloat!=null?a.totalFloat:'',a.pct,a.status,a.predecessors.slice(0,5).join(', '),a._scopeTag||'']));
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(r),'Activities');
+  }
+  if(opts.baseline&&DA.hasBaseline){
+    const r=[['ID','Name','BL Start','BL Finish','Cur Start','Cur Finish','Start Var(d)','Finish Var(d)','Critical','Status']];
+    S.activities.filter(a=>a.blStart||a.blFinish).forEach(a=>r.push([a.actId,a.name,fmt(a.blStart),fmt(a.blFinish),fmt(a.earlyStart),fmt(a.earlyFinish),a.startDelay||0,a.finishDelay||0,a.isCritical?'Yes':'No',a.status]));
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(r),'Baseline Compare');
+  }
+  if(opts.critical){
+    const r=[['ID','Name','Duration(d)','Early Start','Early Finish','Float','Predecessors']];
+    S.activities.filter(a=>a.isCritical).forEach(a=>r.push([a.actId,a.name,a.duration,fmt(a.earlyStart),fmt(a.earlyFinish),a.totalFloat!=null?a.totalFloat:'',a.predecessors.slice(0,5).join(', ')]));
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(r),'Critical Path');
+  }
+  if(opts.findings){
+    const r=[['Priority','Title','Description','Recommendation']];
+    D.findings.forEach(f=>r.push([f.sev.toUpperCase(),f.title,f.body,f.rec||'']));
+    r.push(['','','',''],['Recovery Options','','','']);
+    DA.recs.forEach((rc,i)=>r.push(['Option '+(i+1),rc,'','']));
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(r),'Findings');
+  }
+  if(opts.scope&&SC){
+    const r=[['Scope Item','Status','Matched Activity ID','Matched Activity Name','Confidence%']];
+    SC.matched.forEach(m=>r.push([m.scopeText,'Matched',m.actId,m.actName,m.conf]));
+    SC.missing.forEach(m=>r.push([m.text,'MISSING — not in schedule','','',m.conf]));
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(r),'Scope Gap');
+    const r2=[['Activity ID','Name','WBS','Status','Float','Scope Tag']];
+    SC.orphans.forEach(a=>r2.push([a.actId,a.name,a.wbs,a.status,a.totalFloat!=null?a.totalFloat:'','⚠ Not covered by scope']));
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(r2),'Uncovered Activities');
+  }
+  XLSX.writeFile(wb,`Sarwar_SchedulePro_${S.projectName.replace(/[^a-z0-9]/gi,'_')}_${now.toISOString().slice(0,10)}.xlsx`);
+}
+
+// ══════════════════════════════════════════
+// EXPORT — WORD
+// ══════════════════════════════════════════
+function exportWord(opts){
+  const now=new Date();const isRTL=T('dir')==='rtl';const ff=T('fontFamily');
+  const css=`body{font-family:${ff};font-size:11pt;color:#0d1b2e;margin:2cm;direction:${T('dir')}}
+  h1{font-size:18pt;color:#0b1f3a;border-bottom:2pt solid #0b1f3a;padding-bottom:4pt}
+  h2{font-size:13pt;color:#0b1f3a;border-bottom:1pt solid #dee2e8;padding-bottom:3pt;margin-top:16pt}
+  table{width:100%;border-collapse:collapse;font-size:9.5pt;margin-bottom:10pt}
+  th{background:#0b1f3a;color:#fff;padding:4pt 6pt;text-align:${isRTL?'right':'left'};font-weight:bold}
+  td{padding:3.5pt 6pt;border-bottom:0.5pt solid #dee2e8;color:#2d3f56}
+  tr:nth-child(even) td{background:#f8fafc}
+  .pass{color:#15803d;font-weight:bold}.fail{color:#b91c1c;font-weight:bold}
+  .fh{border-left:3pt solid #b91c1c;padding:5pt 7pt;background:#fef2f2;margin:3pt 0}
+  .fm{border-left:3pt solid #b45309;padding:5pt 7pt;background:#fffbeb;margin:3pt 0}
+  .fl{border-left:3pt solid #15803d;padding:5pt 7pt;background:#f0fdf4;margin:3pt 0}
+  .sigbox{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20pt;margin-top:14pt;border-top:1pt solid #dee2e8;padding-top:8pt}
+  .sig{text-align:center;font-size:10pt;color:#60748a}
+  .scope-miss{border-left:3pt solid #b91c1c;padding:3pt 6pt;background:#fef2f2;margin:2pt 0;font-size:10pt}
+  .scope-orp{border-left:3pt solid #b45309;padding:3pt 6pt;background:#fffbeb;margin:2pt 0;font-size:10pt}`;
+  let body=`<h1>${T('pdfTitle')}</h1><p style="color:#60748a;font-size:10.5pt">Sarwar SchedulePro AI · ${fmt(now)} · ${S.projectName}</p>
+  <table style="margin-bottom:10pt"><tr><td style="border:none;font-weight:bold">Project:</td><td style="border:none">${S.projectName}</td><td style="border:none;font-weight:bold">Data date:</td><td style="border:none">${fmt(S.dataDate)}</td></tr>
+  <tr><td style="border:none;font-weight:bold">Baseline:</td><td style="border:none">${DA.hasBaseline?S.blProjectName:T('noBaseline')}</td><td style="border:none;font-weight:bold">DCMA score:</td><td style="border:none;font-weight:bold;color:${D.score>=75?'#15803d':D.score>=50?'#b45309':'#b91c1c'}">${D.score}/100</td></tr>
+  <tr><td style="border:none;font-weight:bold">${T('projDelay')}:</td><td style="border:none;font-weight:bold;color:${DA.projectDelayDays>0?'#b91c1c':'#15803d'}" colspan="3">${DA.projectDelayDays>0?DA.projectDelayDays+' working days':'None'}</td></tr>
+  <tr><td style="border:none;font-weight:bold">Scope:</td><td style="border:none" colspan="3">${SC?SC.items.length+' items, '+SC.missing.length+' missing from schedule':T('noScopeLoaded')}</td></tr></table>`;
+  if(opts.summary) body+=`<h2>1. Executive Summary</h2><p>${S.activities.length} activities, ${S.relationships.length} relationships. DCMA: <b>${D.score}/100</b>. ${DA.projectDelayDays>0?'<b style="color:#b91c1c">'+DA.projectDelayDays+'d delay.</b>':'<b style="color:#15803d">No confirmed delay.</b>'} ${SC?'Scope: '+SC.missing.length+' items missing.':''}</p>`;
+  if(opts.dcma){
+    body+=`<h2>2. DCMA 14-Point</h2><table><tr><th>#</th><th>Check</th><th>Metric</th><th>Result</th></tr>`;
+    D.checks.forEach(c=>body+=`<tr><td>${c.n}</td><td>${c.name}<br><span style="font-size:8.5pt;color:#60748a">${c.detail}</span></td><td class="${c.pass?'pass':'fail'}">${c.metric}</td><td class="${c.pass?'pass':'fail'}">${c.pass?'PASS':'FAIL'}</td></tr>`);
+    body+=`</table>`;
+  }
+  if(opts.delay){
+    body+=`<h2>3. Delay Root Cause</h2><table><tr><th>Question</th><th>Answer</th></tr>`;
+    DA.wh.forEach(w=>body+=`<tr><td style="font-weight:bold;width:28%">${w.q}</td><td>${w.answer.replace(/<[^>]+>/g,'')}</td></tr>`);
+    body+=`</table>`;
+  }
+  if(opts.scope&&SC){
+    body+=`<h2>4. Scope Gap Analysis</h2><p>Source: <b>${SC.sourceFile}</b> — ${SC.items.length} items. ${SC.matched.length} matched. <b>${SC.missing.length} missing from schedule.</b></p>`;
+    if(SC.missing.length){body+=`<p><b>Missing:</b></p>`;SC.missing.slice(0,60).forEach(m=>body+=`<div class="scope-miss">❌ ${m.text.substring(0,100)}</div>`);}
+    if(SC.orphans.length){body+=`<p><b>Uncovered activities:</b></p>`;SC.orphans.slice(0,30).forEach(a=>body+=`<div class="scope-orp">⚠ ${a.actId} — ${a.name.substring(0,60)}</div>`);}
+  }
+  if(opts.findings){
+    const ord={high:0,medium:1,low:2};body+=`<h2>5. Findings</h2>`;
+    [...D.findings].sort((a,b)=>ord[a.sev]-ord[b.sev]).forEach((f,i)=>body+=`<div class="${f.sev==='high'?'fh':f.sev==='medium'?'fm':'fl'}"><p style="margin:0;font-size:9pt;font-weight:bold">${f.sev.toUpperCase()} — Finding ${i+1}</p><p style="margin:2pt 0;font-weight:bold">${f.title}</p><p style="margin:0">${f.body}</p>${f.rec?'<p style="margin:3pt 0 0;font-size:9pt">💡 '+f.rec+'</p>':''}</div>`);
+    body+=`<p><b>Recovery:</b></p>`;DA.recs.forEach((r,i)=>body+=`<p><b>Option ${i+1}:</b> ${r}</p>`);
+  }
+  if(opts.activities){
+    body+=`<h2>6. Activities (first 150)</h2><table><tr><th>ID</th><th>Name</th><th>Dur</th><th>Start</th><th>Finish</th><th>Float</th><th>Status</th><th>Scope</th></tr>`;
+    S.activities.slice(0,150).forEach(a=>body+=`<tr><td style="font-family:Courier New;font-size:8.5pt">${a.actId}</td><td>${a.name.substring(0,45)}</td><td>${a.duration>0?a.duration+'d':'—'}</td><td>${fmt(a.earlyStart)}</td><td>${fmt(a.earlyFinish)}</td><td style="color:${a.totalFloat!=null&&a.totalFloat<0?'#b91c1c':''}">${a.totalFloat!=null?a.totalFloat+'d':'—'}</td><td>${a.status}</td><td style="color:${a._scopeTag==='✓'?'#15803d':a._scopeTag==='⚠'?'#b45309':'#94a3b8'}">${a._scopeTag||'—'}</td></tr>`);
+    body+=`</table>`;
+  }
+  if(opts.sig) body+=`<h2>${T('signOff')}</h2><div class="sigbox"><div class="sig"><b>${T('preparedBy')}</b><br><br><br>Sarwar SchedulePro AI</div><div class="sig"><b>${T('reviewedBy')}</b><br><br><br>Name / Title<br>Date: ___</div><div class="sig"><b>${T('approvedBy')}</b><br><br><br>Name / Title<br>Date: ___</div></div>`;
+  body+=`<p style="font-size:9pt;color:#60748a;margin-top:1cm"><i>Generated by Sarwar SchedulePro AI · ${fmt(now)}</i></p>`;
+  const html=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40" dir="${T('dir')}"><head><meta charset="UTF-8"><style>${css}</style></head><body>${body}</body></html>`;
+  const blob=new Blob(['\ufeff'+html],{type:'application/msword'});
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');
+  a.href=url;a.download=`Sarwar_SchedulePro_${S.projectName.replace(/[^a-z0-9]/gi,'_')}_${new Date().toISOString().slice(0,10)}.doc`;
+  a.click();URL.revokeObjectURL(url);
+}
+
+// ══════════════════════════════════════════
+// EXPORT — CSV
+// ══════════════════════════════════════════
+function exportCSV(){
+  const r=[['Activity ID','Name','Type','WBS','Duration(d)','Early Start','Early Finish','BL Start','BL Finish','Total Float(d)','% Complete','Status','Start Var(d)','Finish Var(d)','Critical','Constraint','Predecessors','Scope Tag']];
+  S.activities.forEach(a=>r.push([a.actId,`"${a.name.replace(/"/g,'""')}"`,a.type,`"${a.wbs}"`,a.duration,fmt(a.earlyStart),fmt(a.earlyFinish),fmt(a.blStart||null),fmt(a.blFinish||null),a.totalFloat!=null?a.totalFloat:'',a.pct,a.status,a.startDelay||0,a.finishDelay||0,a.isCritical?'Yes':'No',a.constraintType||'',`"${a.predecessors.join(',')}"`,a._scopeTag||'']));
+  const csv=r.map(row=>row.join(',')).join('\n');
+  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');
+  a.href=url;a.download=`Sarwar_SchedulePro_${S.projectName.replace(/[^a-z0-9]/gi,'_')}_activities.csv`;
+  a.click();URL.revokeObjectURL(url);
+}
+
+// ══════════════════════════════════════════
+// MODAL & EXPORT DISPATCH
+// ══════════════════════════════════════════
+let selectedFmt='pdf';
+function openModal(){document.getElementById('exportModal').classList.add('open');}
+function closeModal(){document.getElementById('exportModal').classList.remove('open');}
+document.getElementById('exportModal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal();});
+function selectFmt(f){
+  selectedFmt=f;
+  ['pdf','xl','wd','csv'].forEach(x=>document.getElementById('fmt'+x.charAt(0).toUpperCase()+x.slice(1)).classList.toggle('active',x===f));
+}
+function collectOpts(){
+  return{summary:document.getElementById('chk-summary').checked,dcma:document.getElementById('chk-dcma').checked,
+    delay:document.getElementById('chk-delay').checked,baseline:document.getElementById('chk-baseline').checked,
+    critical:document.getElementById('chk-critical').checked,findings:document.getElementById('chk-findings').checked,
+    activities:document.getElementById('chk-activities').checked,scope:document.getElementById('chk-scope').checked,
+    sig:document.getElementById('chk-sig').checked};
+}
+function runExport(){
+  closeModal();const o=collectOpts();
+  if(selectedFmt==='pdf') exportPDF(o);
+  else if(selectedFmt==='xl') exportExcel(o);
+  else if(selectedFmt==='wd') exportWord(o);
+  else exportCSV();
+}
+// Per-section download
+function secExport(sec,fmt){
+  const all={summary:true,dcma:true,delay:true,baseline:true,critical:true,findings:true,activities:true,scope:true,sig:true};
+  const secMap={dcma:{dcma:true,sig:true},delay:{delay:true,sig:true},baseline:{baseline:true,sig:true},scope:{scope:true,sig:true},activities:{activities:true,sig:true},critical:{critical:true,sig:true},charts:{},findings:{findings:true,sig:true},report:all};
+  const o={...{summary:false,dcma:false,delay:false,baseline:false,critical:false,findings:false,activities:false,scope:false,sig:false},...(secMap[sec]||all)};
+  if(fmt==='pdf') exportPDF(o);
+  else if(fmt==='xl') exportExcel(o);
+  else if(fmt==='wd') exportWord(o);
+  else exportCSV();
+}
+</script>
+<script>
+// ══════════════════════════════════════════
+// FILE HANDLING & MAIN FLOW
+// ══════════════════════════════════════════
+function setStep(n){for(let i=1;i<=6;i++){const e=document.getElementById('ls'+i);if(e)e.className=i<n?'lstep done':i===n?'lstep active':'lstep';}}
+
+function processFile(file){
+  const ext=file.name.split('.').pop().toLowerCase();
+  return new Promise((resolve,reject)=>{
+    if(ext==='xlsx'||ext==='xls'){
+      const fr=new FileReader();
+      fr.onload=e=>{try{const s=parseExcel(new Uint8Array(e.target.result));s._format='Excel';resolve(s);}catch(err){reject(err);}};
+      fr.onerror=()=>reject(new Error('Could not read file'));
+      fr.readAsArrayBuffer(file);
+    } else {
+      const fr=new FileReader();
+      fr.onload=e=>{try{
+        const text=e.target.result;let s;
+        if(ext==='xer'){s=parseXER(text);s._format='P6 XER';}
+        else if(ext==='xml'){s=parseXML(text);s._format=text.includes('APIBusinessObjects')||text.includes('<WBS>')?'P6 XML':'MS Project XML';}
+        else throw new Error('Unsupported file type: .'+ext);
+        resolve(s);
+      }catch(err){reject(err);}};
+      fr.onerror=()=>reject(new Error('Could not read file'));
+      fr.readAsText(file,'UTF-8');
+    }
+  });
+}
+
+let pendingFile=null,baselineSched=null,scopeRaw=null;
+
+async function loadAndAnalyse(){
+  try{
+    setStep(2);
+    let sched=await processFile(pendingFile);
+    setStep(3);
+    if(baselineSched) sched=mergeBaseline(sched,baselineSched);
+    setStep(4);
+    const dcma=runDCMA(sched);
+    setStep(5);
+    const delay=runDelayAnalysis(sched,dcma);
+    setStep(6);
+    // Scope matching
+    if(scopeRaw){SC=runScopeMatch(scopeRaw,sched);}
+    else SC=null;
+    await new Promise(r=>setTimeout(r,200));
+    renderAll(sched,dcma,delay);
+    document.getElementById('loadingSection').style.display='none';
+    document.getElementById('dashboard').style.display='block';
+  }catch(err){
+    alert('Error: '+err.message+'\n\nPlease check this is a valid P6 XER, MSPDI XML, P6 XML, or Excel file.');
+    resetApp();
+  }
+}
+
+function handleScheduleFile(file){
+  if(!file) return;
+  pendingFile=file;
+  document.getElementById('uploadSection').style.display='none';
+  document.getElementById('loadingSection').style.display='flex';
+  document.getElementById('lmsg').textContent='Processing '+file.name+'…';
+  setStep(1);
+  setTimeout(loadAndAnalyse,100);
+}
+
+// Wire up schedule file inputs
+['xer','xml','xlsx'].forEach(fmt_=>{
+  const inp=document.getElementById('fi-'+fmt_);
+  inp.addEventListener('change',e=>{if(e.target.files[0]) handleScheduleFile(e.target.files[0]);});
+});
+// Drag and drop
+['dz-xer','dz-xml','dz-xlsx'].forEach(id=>{
+  const el=document.getElementById(id);
+  el.addEventListener('dragover',e=>{e.preventDefault();el.classList.add('drag');});
+  el.addEventListener('dragleave',()=>el.classList.remove('drag'));
+  el.addEventListener('drop',e=>{e.preventDefault();el.classList.remove('drag');const f=e.dataTransfer.files[0];if(f) handleScheduleFile(f);});
+});
+
+// ── BASELINE ──
+function blZoneClick(e){if(!baselineSched) document.getElementById('fi-bl').click();}
+function setBaselineLoaded(name){
+  document.getElementById('bl-label').textContent='✓ Baseline loaded: '+name;
+  document.getElementById('bl-label').style.color='var(--success)';
+  document.getElementById('bl-tag').textContent='✓ BASELINE LOADED';
+  document.getElementById('bl-sub').textContent='Baseline will be compared against the current schedule. Use the buttons below to change or remove it.';
+  document.getElementById('bl-actions').style.display='flex';
+  document.getElementById('dz-bl').classList.add('loaded');
+  document.getElementById('dz-bl').style.cursor='default';
+}
+function removeBaseline(){
+  baselineSched=null;
+  document.getElementById('bl-label').textContent=T('blDrop');
+  document.getElementById('bl-label').style.color='';
+  document.getElementById('bl-tag').textContent='BASELINE';
+  document.getElementById('bl-sub').textContent=T('blDropSub');
+  document.getElementById('bl-actions').style.display='none';
+  document.getElementById('dz-bl').classList.remove('loaded');
+  document.getElementById('dz-bl').style.cursor='pointer';
+  document.getElementById('fi-bl').value='';
+}
+function removeBLFromDash(){
+  removeBaseline();
+  document.getElementById('dashBlBtn').style.display='none';
+  if(pendingFile){
+    document.getElementById('loadingSection').style.display='flex';
+    document.getElementById('dashboard').style.display='none';
+    document.getElementById('lmsg').textContent='Re-analysing without baseline…';
+    setStep(1);setTimeout(loadAndAnalyse,100);
+  }
+}
+document.getElementById('fi-bl').addEventListener('change',async e=>{
+  const f=e.target.files[0];if(!f) return;
+  try{baselineSched=await processFile(f);setBaselineLoaded(f.name);}
+  catch(err){alert('Baseline error: '+err.message);}
+});
+const blEl=document.getElementById('dz-bl');
+blEl.addEventListener('dragover',e=>{e.preventDefault();if(!baselineSched) blEl.style.borderColor='var(--success)';});
+blEl.addEventListener('dragleave',()=>blEl.style.borderColor='');
+blEl.addEventListener('drop',async e=>{
+  e.preventDefault();blEl.style.borderColor='';
+  const f=e.dataTransfer.files[0];
+  if(f){try{baselineSched=await processFile(f);setBaselineLoaded(f.name);}catch(err){alert('Baseline error: '+err.message);}}
+});
+
+// ── SCOPE ──
+function scZoneClick(e){if(!scopeRaw) document.getElementById('fi-sc').click();}
+function setScopeLoaded(name,count){
+  document.getElementById('sc-label').textContent=`✓ Scope loaded: ${name} — ${count} deliverable items extracted`;
+  document.getElementById('sc-label').style.color='var(--success)';
+  document.getElementById('sc-tag').textContent='✓ SCOPE LOADED';
+  document.getElementById('sc-sub').textContent='Scope document is ready. It will be compared against the schedule activities on upload.';
+  document.getElementById('sc-actions').style.display='flex';
+  document.getElementById('dz-sc').classList.add('loaded');
+  document.getElementById('dz-sc').style.cursor='default';
+}
+function removeScope(){
+  scopeRaw=null;SC=null;
+  document.getElementById('sc-label').textContent=T('scDrop');
+  document.getElementById('sc-label').style.color='';
+  document.getElementById('sc-tag').textContent='SCOPE DOC';
+  document.getElementById('sc-sub').textContent=T('scDropSub');
+  document.getElementById('sc-actions').style.display='none';
+  document.getElementById('dz-sc').classList.remove('loaded');
+  document.getElementById('dz-sc').style.cursor='pointer';
+  document.getElementById('fi-sc').value='';
+}
+document.getElementById('fi-sc').addEventListener('change',async e=>{
+  const f=e.target.files[0];if(!f) return;
+  try{
+    document.getElementById('sc-label').textContent='⏳ Parsing scope document — please wait…';
+    document.getElementById('sc-label').style.color='var(--accent)';
+    scopeRaw=await parseScopeDoc(f);
+    setScopeLoaded(f.name,scopeRaw.items.length);
+  }catch(err){alert('Scope parse error: '+err.message);}
+});
+const scEl=document.getElementById('dz-sc');
+scEl.addEventListener('dragover',e=>{e.preventDefault();if(!scopeRaw) scEl.style.borderColor='var(--purple)';});
+scEl.addEventListener('dragleave',()=>scEl.style.borderColor='');
+scEl.addEventListener('drop',async e=>{
+  e.preventDefault();scEl.style.borderColor='';
+  const f=e.dataTransfer.files[0];
+  if(f){
+    try{
+      document.getElementById('sc-label').textContent='⏳ Parsing scope document…';
+      document.getElementById('sc-label').style.color='var(--accent)';
+      scopeRaw=await parseScopeDoc(f);setScopeLoaded(f.name,scopeRaw.items.length);
+    }catch(err){alert('Scope parse error: '+err.message);}
+  }
+});
+
+// ── TAB SWITCHING ──
+function showTab(name,el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tp').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
+  if(name==='charts'&&S) setTimeout(()=>renderCharts(S),50);
+}
+
+// ── RESET ──
+function resetApp(){
+  document.getElementById('uploadSection').style.display='block';
+  document.getElementById('loadingSection').style.display='none';
+  document.getElementById('dashboard').style.display='none';
+  ['fi-xer','fi-xml','fi-xlsx'].forEach(id=>document.getElementById(id).value='');
+  pendingFile=null;
+  // Keep baseline and scope so user can load new schedule against same
+}
+</script>
+</body>
+</html>
